@@ -92,6 +92,7 @@
   <div class="progress"><div id="bar"></div></div>
   <span id="counter"></span>
   <span id="saveState"></span>
+  <button id="pauseBtn" hidden>Przerwij i zapisz</button>
 </header>
 <div class="banner" id="noEndpoint" hidden>Tryb testowy: brak adresu arkusza (ENDPOINT), odpowiedzi zapisują się tylko w tej przeglądarce.</div>
 <main id="app"></main>
@@ -107,13 +108,14 @@ const ENDPOINT = "https://script.google.com/macros/s/AKfycbzZb7f3xQK1iH1S8-9IYEY
 const N = 40;
 const PRZYPADKI = Array.from({ length: N }, (_, i) => "P" + String(i + 1).padStart(2, "0"));
 const CHOROBY = [
+  { kod: "Healthy",      pl: "Bez zmian patologicznych", opis: "zdjęcie prawidłowe, żadna z poniższych chorób" },
   { kod: "Cardiomegaly", pl: "Kardiomegalia", opis: "powiększenie sylwetki serca" },
   { kod: "Effusion",     pl: "Płyn w jamie opłucnej", opis: "wysięk opłucnowy" },
   { kod: "Edema",        pl: "Obrzęk płuc", opis: "" },
   { kod: "Pneumothorax", pl: "Odma opłucnowa", opis: "" },
 ];
 const LITERY = ["A", "B", "C"];
-const STORAGE_KEY = "ankieta_kontrfakty_v2";
+const STORAGE_KEY = "ankieta_kontrfakty_v3";
 const img = (id, w) => `img/${id}/${w.toLowerCase()}.png`;
 const $app = document.getElementById("app");
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -165,6 +167,7 @@ function updateHeader() {
   const done = Object.values(S.odpowiedzi).filter(o => o.ukonczono).length;
   document.getElementById("bar").style.width = (100 * done / N) + "%";
   document.getElementById("counter").textContent = S.oceniajacy ? `${done}/${N}` : "";
+  document.getElementById("pauseBtn").hidden = !S.oceniajacy || S.pauza || S.idx >= N;
 }
 
 // ---------- ekrany ----------
@@ -173,15 +176,16 @@ function renderStart() {
     <div class="card">
       <div class="eyebrow">NIH ChestX-ray14 · ${N} przypadków</div>
       <h2>Ocena zmodyfikowanych zdjęć RTG klatki piersiowej</h2>
-      <p>W każdym przypadku zobaczy Pan/Pani <b>oryginalne zdjęcie RTG</b> i wybierze rozpoznanie spośród czterech chorób.
+      <p>W każdym przypadku zobaczy Pan/Pani <b>oryginalne zdjęcie RTG</b> i oceni, czy jest <b>prawidłowe</b>,
+         czy widać na nim jedną z czterech chorób: kardiomegalię, płyn w jamie opłucnej, obrzęk płuc lub odmę.
          Następnie pokażemy <b>trzy zmodyfikowane wersje</b> tego zdjęcia (A, B, C), wygenerowane przez algorytmy AI.
          Każdą wersję prosimy ocenić w skali <b>0–10</b>: <b>na ile ta zmiana obrazu zmieniłaby Pana/Pani rozpoznanie</b>.</p>
       <ul class="muted">
         <li>Jeden przypadek zajmuje zwykle 1–2 minuty.</li>
         <li>Obrazy mają 256×256 px (przeskalowane z oryginałów 1024×1024). Kliknięcie powiększa obraz.</li>
         <li>Przytrzymanie obrazu wersji A/B/C pokazuje w tym miejscu oryginał, co ułatwia porównanie.</li>
-        <li>Odpowiedzi są wysyłane do zespołu badawczego po każdym przypadku. Można przerwać i wrócić później
-            w tej samej przeglądarce.</li>
+        <li>Odpowiedzi są wysyłane do zespołu badawczego po każdym przypadku. W dowolnym momencie można kliknąć
+            <b>Przerwij i zapisz</b> u góry strony i wrócić później tym samym linkiem w tej samej przeglądarce.</li>
       </ul>
       <form id="startForm">
         <label class="field" for="rid">Identyfikator lub inicjały *</label>
@@ -222,7 +226,7 @@ function renderCase() {
         <div class="diag">
           <img class="xray zoomable" src="${img(id, "o")}" alt="Oryginalne zdjęcie RTG">
           <div>
-            <h3>Jakie jest najbardziej prawdopodobne rozpoznanie na tym zdjęciu?</h3>
+            <h3>Czy zdjęcie jest prawidłowe? Jeśli nie, jakie jest najbardziej prawdopodobne rozpoznanie?</h3>
             <div class="options">
               ${CHOROBY.map((c, i) => `
                 <label class="opt"><input type="radio" name="dx" id="dx${i}" value="${c.kod}" ${o.diagnoza === c.kod ? "checked" : ""}>
@@ -261,7 +265,8 @@ function renderCase() {
             <button class="link" id="changeDx">zmień</button></div>
         </div>
         <p class="hint">Dla każdej wersji: <b>na ile zmiana obrazu zmienia Pana/Pani rozpoznanie</b> w porównaniu z oryginałem?
-          0 = rozpoznanie bez zmian, 10 = rozpoznanie całkowicie zmienione. Przytrzymaj obraz, aby zobaczyć oryginał.</p>
+          0 = rozpoznanie bez zmian, 10 = rozpoznanie całkowicie zmienione (np. zdjęcie prawidłowe stało się chorobowe
+          albo odwrotnie). Przytrzymaj obraz, aby zobaczyć oryginał.</p>
         <div class="cfs">
           ${LITERY.map(L => `
             <div class="cf">
@@ -329,13 +334,45 @@ function renderEnd() {
         return `<tr><td>${S.kolejnosc.indexOf(id) + 1}</td><td>${CHOROBY.find(c => c.kod === o.diagnoza).pl}</td>
         <td>${o.pewnosc ?? ""}</td><td>${o.A}</td><td>${o.B}</td><td>${o.C}</td></tr>`; }).join("")}</tbody></table>
     </div>`;
-  document.getElementById("csv").onclick = () => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([toCSV(ids.map(rowFor))], { type: "text/csv;charset=utf-8" }));
-    a.download = `oceny_${S.oceniajacy.id.replace(/[^\w-]+/g, "_")}.csv`; a.click();
-  };
+  document.getElementById("csv").onclick = downloadCSV;
   document.getElementById("retry")?.addEventListener("click", async () => { await flush(); render(); });
   document.getElementById("review").onclick = () => { S.idx = N - 1; save(); render(); };
+}
+
+// ---------- przerwa: zapis dotychczasowych wyników i wyjście ----------
+function renderPause() {
+  const done = S.kolejnosc.filter(id => S.odpowiedzi[id]?.ukonczono).length;
+  const pending = ENDPOINT ? S.doWyslania.length : done;
+  const inProgress = S.idx < N && !S.odpowiedzi[S.kolejnosc[S.idx]]?.ukonczono && S.odpowiedzi[S.kolejnosc[S.idx]];
+  $app.innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Ankieta przerwana</div>
+      <h2>Zapisano ${done} z ${N} przypadków</h2>
+      <p>${pending
+        ? `<b>${pending} odpowiedzi nie udało się jeszcze wysłać.</b> Zostaną wysłane automatycznie po powrocie do ankiety.
+           Można też pobrać plik CSV i przesłać go badaczowi.`
+        : "Wszystkie ukończone przypadki zostały wysłane do zespołu badawczego."}
+        ${inProgress ? " Rozpoczęty przypadek nie został jeszcze wysłany; dokończy go Pan/Pani po powrocie." : ""}</p>
+      <p>Aby kontynuować później, wystarczy otworzyć ten sam link <b>w tej samej przeglądarce</b>.
+         Ankieta wznowi się od przypadku ${Math.min(S.idx + 1, N)}. Można teraz bezpiecznie zamknąć kartę.</p>
+      <div class="row">
+        <button class="primary" id="resume">Kontynuuj ankietę</button>
+        <button id="csv" ${done ? "" : "disabled"}>Pobierz kopię odpowiedzi (CSV)</button>
+      </div>
+    </div>`;
+  document.getElementById("resume").onclick = () => { S.pauza = false; save(); flush(); render(); };
+  document.getElementById("csv").onclick = downloadCSV;
+}
+document.getElementById("pauseBtn").onclick = async () => {
+  S.pauza = true; save(); render(); scrollTo(0, 0);
+  await flush(); if (S.pauza) render();
+};
+
+function downloadCSV() {
+  const ids = S.kolejnosc.filter(id => S.odpowiedzi[id]?.ukonczono);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([toCSV(ids.map(rowFor))], { type: "text/csv;charset=utf-8" }));
+  a.download = `oceny_${S.oceniajacy.id.replace(/[^\w-]+/g, "_")}.csv`; a.click();
 }
 function toCSV(rs) {
   if (!rs.length) return "";
@@ -367,6 +404,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") lb.hidden = 
 function render() {
   updateHeader();
   if (!S.oceniajacy) return renderStart();
+  if (S.pauza) return renderPause();
   if (S.idx >= N) return renderEnd();
   renderCase();
 }
