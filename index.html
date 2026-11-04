@@ -1,7 +1,13 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ocena kontrfaktów RTG v2</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
+  [hidden] { display: none !important; }   /* .lightbox ma display:flex, które inaczej nadpisuje hidden */
   /* Układ: pasek postępu u góry, jedna pozycja na ekran; w przypadku zakładki Oryginał · A–G · Podsumowanie.
      Obrazy zawsze na czarnym tle, jak w przeglądarce PACS. */
   :root {
@@ -115,6 +121,8 @@
   }
   @media (prefers-reduced-motion: reduce) { .progress > div { transition: none; } }
 </style>
+</head>
+<body>
 
 <header>
   <h1>Ocena kontrfaktów RTG · v2</h1>
@@ -699,3 +707,5 @@ function render() {
   render();
 })();
 </script>
+</body>
+</html>
