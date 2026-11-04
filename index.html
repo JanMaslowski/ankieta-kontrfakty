@@ -143,6 +143,9 @@
 // mapowanie na metody zna tylko badacz (results/ankieta_nih/KLUCZ_nie_dla_oceniajacego.csv).
 // Wersja na GitHub Pages: bez logowania; odpowiedzi idą do Arkusza Google przez Google Apps Script
 // (config.js: API_URL; kod skryptu: tools/ankieta_nih/apps_script/Code.gs).
+// Wersja strony; ta sama wartość jest w dane.json ("strona"). Przy każdym wdrożeniu zmień obie:
+// otwarte karty co 3 min sprawdzają dane.json i po zmianie same się przeładowują (po wysłaniu odpowiedzi).
+const WERSJA_STRONY = "2026-11-04b";
 const CHOROBY = {
   Cardiomegaly: { pl: "kardiomegalia", dop: "kardiomegalii", narz: "kardiomegalią", opis: "powiększenie sylwetki serca" },
   Effusion:     { pl: "płyn w jamie opłucnej", dop: "płynu w jamie opłucnej", narz: "płynem w jamie opłucnej", opis: "" },
@@ -188,6 +191,18 @@ function enqueue(rodzaj, klucz, dane) {
   lsSet("kolejka_" + token, kolejka);
   lsSet("kopia_" + token, { konto: K, odp: ODP });
   clearTimeout(flushTimer); flushTimer = setTimeout(flush, 400);
+}
+// Nowa wersja na serwerze → przeładuj kartę (najpierw wysyłka zaległych odpowiedzi; bez pętli przeładowań).
+async function sprawdzWersje() {
+  try {
+    const d = await (await fetch("dane.json?t=" + Date.now(), { cache: "no-store" })).json();
+    if (!d.strona || d.strona === WERSJA_STRONY) return false;
+    if (Object.keys(kolejka).length) { await flush(); if (Object.keys(kolejka).length) return false; }
+    try { if (sessionStorage.getItem("przeladowano") === d.strona) return false; sessionStorage.setItem("przeladowano", d.strona); } catch {}
+    const q = new URLSearchParams(location.search); q.set("v", d.strona);
+    location.replace(location.pathname + "?" + q.toString());
+    return true;
+  } catch { return false; }
 }
 async function flush() {
   if (wysylanie || !token) return;
@@ -705,13 +720,17 @@ function render() {
 // ---------- start ----------
 (async () => {
   try {
-    const d = await (await fetch("dane.json")).json();
+    const d = await (await fetch("dane.json?v=" + WERSJA_STRONY)).json();
     SEQ_ALL = d.sekwencja; SEQ = SEQ_ALL.filter(it => !it.pomin); let nr = 0; SEQ.forEach(it => { if (it.typ === "przypadek") it.nr = ++nr; }); NPRZ = nr;
   } catch { return renderNoAccess("Nie udało się wczytać listy przypadków. Odśwież stronę."); }
   if (typeof API_URL !== "string" || !/^https:\/\/script\.google\.com\//.test(API_URL))
     return renderNoAccess("Ankieta nie jest jeszcze skonfigurowana (brak adresu zapisu w config.js). Proszę skontaktować się z badaczem.");
   try { if ((await api({})).ankieta !== "NIH v2") throw 0; }    // pod adresem nadal stary skrypt (v1)?
   catch { return renderNoAccess("Ankieta jest w trakcie aktualizacji albo nie ma połączenia z bazą odpowiedzi. Proszę spróbować później."); }
+  if (typeof setInterval === "function") {
+    setInterval(sprawdzWersje, 180000);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") sprawdzWersje(); });
+  }
   K = { sesje: {}, aktywna: null };
   if (PANEL) { view = "owner"; return render(); }
   const t = new URLSearchParams(location.search).get("kod")?.toUpperCase() || lsGet("token");
