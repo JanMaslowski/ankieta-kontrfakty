@@ -534,7 +534,7 @@ function bindVersion(o, L, check) {
   // przełączanie oryginał ↔ wersja w tym samym miejscu
   const f = document.getElementById("flip"), tag = document.getElementById("flipTag"), j = LITERY.indexOf(L) + 1;
   let pokazOryg = false, held = false, timer;
-  const set = v => { pokazOryg = v; f.style.backgroundPosition = `${(v ? 0 : j) * 20}% 0`;
+  const set = v => { pokazOryg = v; f.style.backgroundPosition = `${(v ? 0 : j) * 100 / LITERY.length}% 0`;
     tag.textContent = v ? "ORYGINAŁ" : "WERSJA " + L; tag.classList.toggle("alt", v); };
   flipCurrent = () => set(!pokazOryg);
   document.getElementById("flipBtn").onclick = flipCurrent;
