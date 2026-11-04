@@ -1,40 +1,44 @@
-<!doctype html>
-<html lang="pl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>Ocena kontrfaktów RTG</title>
+<title>Ocena kontrfaktów RTG v2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
+  /* Układ: pasek postępu u góry, jedna pozycja na ekran; w przypadku zakładki Oryginał · A–G · Podsumowanie.
+     Obrazy zawsze na czarnym tle, jak w przeglądarce PACS. */
   :root {
-    --bg: #f3f5f7; --card: #ffffff; --ink: #18202a; --muted: #5a6573; --line: #d9dee4;
-    --accent: #1f5fae; --accent-ink: #ffffff; --ok: #1d7a46; --warn: #a24f0c; --film: #000000; --film-ink: #ffffff;
+    --bg: #f2f4f6; --card: #ffffff; --ink: #18202a; --muted: #5a6573; --line: #d7dde3;
+    --accent: #1f5fae; --accent-ink: #ffffff; --accent-soft: #e3ecf8; --ok: #1d7a46; --warn: #a24f0c;
+    --film: #000000; --film-ink: #ffffff;
     --sans: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   }
-  @media (prefers-color-scheme: dark) { :root {
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
     --bg: #0f1318; --card: #171c23; --ink: #e5e9ee; --muted: #98a2ae; --line: #2a313a;
-    --accent: #6ea4ee; --accent-ink: #0b1220; --ok: #4fc283; --warn: #f0a35a; color-scheme: dark; } }
+    --accent: #6ea4ee; --accent-ink: #0b1220; --accent-soft: #1b2a40; --ok: #4fc283; --warn: #f0a35a; color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #0f1318; --card: #171c23; --ink: #e5e9ee; --muted: #98a2ae; --line: #2a313a;
+    --accent: #6ea4ee; --accent-ink: #0b1220; --accent-soft: #1b2a40; --ok: #4fc283; --warn: #f0a35a; color-scheme: dark; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
-  header { position: sticky; top: 0; z-index: 5; background: var(--card);
-           border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 14px; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--card); }
+  header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--card);
+           border-bottom: 1px solid var(--line); padding-block: 10px;
+           padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+           display: flex; align-items: center; gap: 14px; }
   header h1 { font-size: 15px; margin: 0; font-weight: 600; white-space: nowrap; }
   .progress { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; min-width: 60px; }
   .progress > div { height: 100%; background: var(--accent); width: 0; transition: width .2s; }
   #counter, #saveState { color: var(--muted); font: 13px var(--mono); white-space: nowrap; }
   #saveState.err { color: var(--warn); }
-  .banner { background: var(--warn); color: var(--accent-ink); padding: 8px 16px; font-size: 14px; }
-  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 80px; }
+  main { max-width: 1180px; margin: 0 auto; padding-block: 20px 80px;
+         padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 20px; margin-bottom: 16px; }
-  h2 { font-size: 19px; margin: 0 0 12px; text-wrap: balance; }
-  h3 { font-size: 15px; margin: 0 0 10px; }
-  p { max-width: 70ch; }
+  h2 { font-size: 19px; margin: 0 0 8px; text-wrap: balance; }
+  h3 { font-size: 15px; margin: 0 0 8px; }
+  p, li { max-width: 72ch; }
   .muted { color: var(--muted); }
   .eyebrow { font: 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
   label.field { display: block; margin: 14px 0 4px; font-weight: 500; }
-  input[type=text], select, textarea { width: 100%; max-width: 420px; padding: 8px 10px; font: inherit;
+  input[type=text], input[type=number], select, textarea { width: 100%; max-width: 420px; padding: 8px 10px; font: inherit;
          border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
   textarea { max-width: none; min-height: 60px; }
   button { font: inherit; padding: 9px 18px; border-radius: 6px; border: 1px solid var(--line);
@@ -43,336 +47,616 @@
   button.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; }
   button:disabled { opacity: .45; cursor: not-allowed; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  [hidden] { display: none !important; }
   .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
   .spacer { flex: 1; }
+  .task { background: var(--accent-soft); border-radius: 6px; padding: 10px 14px; margin: 8px 0 0; max-width: none; }
 
-  .xray { width: 100%; max-width: 100%; aspect-ratio: 1; background: var(--film); border-radius: 4px; display: block;
-          object-fit: contain; cursor: zoom-in; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-  .diag { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 24px; align-items: start; }
-  .options { display: grid; gap: 8px; }
-  .opt { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line);
-         border-radius: 6px; cursor: pointer; }
-  .opt:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-  .opt small { color: var(--muted); display: block; }
+  /* zakładki przypadku */
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0 0; }
+  .tab { padding: 6px 12px; font: 500 13px var(--mono); border-radius: 999px; }
+  .tab.cur { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .tab.done:not(.cur) { color: var(--ok); border-color: var(--ok); }
 
-  .ref { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; align-items: center; margin-bottom: 16px; }
-  .cfs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-  .cf { border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
-  .cf h3 { display: flex; justify-content: space-between; align-items: baseline; }
-  .imgwrap { position: relative; }
-  .imgwrap .tag { position: absolute; top: 6px; left: 6px; background: var(--film); color: var(--film-ink);
-                  font: 11px var(--mono); letter-spacing: .06em; padding: 2px 6px; border-radius: 3px; pointer-events: none; }
-  .scale { margin-top: 12px; }
-  .scale input[type=range] { width: 100%; accent-color: var(--accent); }
-  .scale input.untouched { opacity: .35; }
-  .scale .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); gap: 8px; }
-  .val { font: 600 18px var(--mono); }
-  .val.empty { color: var(--warn); font: 500 12px var(--sans); }
-  .hint { font-size: 14px; color: var(--muted); margin: 0 0 14px; }
+  /* klisze: arkusz 8 kafli (oryginał, A–G), pokazujemy jeden kafel przez background-position */
+  .film { position: relative; width: 100%; max-width: 100%; aspect-ratio: 1; background-color: var(--film);
+          background-repeat: no-repeat; border-radius: 4px; cursor: zoom-in; user-select: none; -webkit-user-select: none;
+          touch-action: manipulation; }
+  .film .tag { position: absolute; top: 6px; left: 6px; background: var(--film); color: var(--film-ink);
+               font: 11px var(--mono); letter-spacing: .06em; padding: 2px 6px; border-radius: 3px; pointer-events: none;
+               border: 1px solid #ffffff55; }
+  .film .tag.alt { background: var(--accent); color: var(--accent-ink); }
+  .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+  .pair figure { margin: 0; min-width: 0; }
+  .pair figcaption { font: 12px var(--mono); color: var(--muted); margin-bottom: 4px; letter-spacing: .04em; text-transform: uppercase; }
+  .vlayout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 16px; }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+  .tools button { padding: 6px 12px; font-size: 14px; }
+  kbd { font: 12px var(--mono); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+  .single { max-width: 560px; }
 
-  .lightbox { position: fixed; inset: 0; background: var(--film); display: flex; align-items: center;
-              justify-content: center; z-index: 20; cursor: zoom-out; padding: 16px; }
-  .lightbox img { max-width: 100%; max-height: 100%; }
+  /* pytania */
+  .q { padding: 12px 0; border-top: 1px solid var(--line); }
+  .q:first-child { border-top: 0; padding-top: 0; }
+  .q > .qt { font-weight: 600; margin-bottom: 6px; }
+  .q > .qt small { font-weight: 400; color: var(--muted); }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seg label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line);
+               border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .seg label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+  .seg input { accent-color: var(--accent); }
+  .seg.num label { min-width: 44px; justify-content: center; font: 600 15px var(--mono); }
+  .seg.num input { position: absolute; opacity: 0; pointer-events: none; }
+  .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); max-width: 300px; margin-top: 4px; }
+  .sub { margin-top: 10px; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; }
+  .sub .qt { font-weight: 500; margin: 8px 0 4px; }
+  .sub .qt:first-child { margin-top: 0; }
+  .ctr { display: flex; gap: 12px; flex-wrap: wrap; }
+  .ctr label { font-size: 13px; color: var(--muted); }
+  .ctr input { width: 110px; display: block; }
+  .missing { color: var(--warn); font-size: 13px; }
+
+  .lightbox { position: fixed; inset: 0; background: var(--film); display: flex; flex-direction: column; align-items: center;
+              justify-content: center; gap: 10px; z-index: 20; padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px)); }
+  .lightbox .film { width: min(94vw, calc(100vh - 110px)); max-width: 1024px; cursor: zoom-out; }
+  .lightbox .bar { display: flex; gap: 10px; align-items: center; color: var(--film-ink); font: 13px var(--mono); flex-wrap: wrap; justify-content: center; }
+  .lightbox button { background: var(--film); color: var(--film-ink); border-color: #ffffff66; }
 
   .tablewrap { overflow-x: auto; }
   table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 14px; }
   th, td { border-bottom: 1px solid var(--line); padding: 6px 10px; text-align: left; white-space: nowrap; }
   th { font: 12px var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); }
+  .pill.done { color: var(--ok); border-color: var(--ok); }
+  textarea.csv { font: 12px var(--mono); min-height: 160px; margin-top: 12px; }
 
-  @media (max-width: 820px) {
-    .diag, .cfs { grid-template-columns: minmax(0, 1fr); }
+  @media (max-width: 860px) {
+    .vlayout { grid-template-columns: minmax(0, 1fr); }
     header h1 { display: none; }
   }
+  @media (prefers-reduced-motion: reduce) { .progress > div { transition: none; } }
 </style>
-</head>
-<body>
+
 <header>
-  <h1>Ocena kontrfaktów RTG</h1>
+  <h1>Ocena kontrfaktów RTG · v2</h1>
   <div class="progress"><div id="bar"></div></div>
   <span id="counter"></span>
   <span id="saveState"></span>
-  <button id="pauseBtn" hidden>Przerwij i zapisz</button>
+  <button class="link" id="ownerBtn" hidden>Panel badacza</button>
 </header>
-<div class="banner" id="noEndpoint" hidden>Tryb testowy: brak adresu arkusza (ENDPOINT), odpowiedzi zapisują się tylko w tej przeglądarce.</div>
-<main id="app"></main>
-<div class="lightbox" id="lightbox" hidden><img alt="Powiększony obraz"></div>
+<main id="app"><div class="card"><p class="muted">Łączenie z bazą odpowiedzi…</p></div></main>
+<div class="lightbox" id="lightbox" hidden>
+  <div class="film" id="lbFilm"><span class="tag" id="lbTag"></span></div>
+  <div class="bar"><button id="lbFlip" type="button">Przełącz oryginał ↔ wersja</button><span><kbd>spacja</kbd> przełącza · <kbd>Esc</kbd> zamyka</span><button id="lbClose" type="button">Zamknij</button></div>
+</div>
 
+<script src="config.js"></script>
 <script>
-// ===================== KONFIGURACJA =====================
-// Adres wdrożonej aplikacji Google Apps Script (kończy się na /exec). Patrz README.md.
-const ENDPOINT = "https://script.google.com/macros/s/AKfycbzZb7f3xQK1iH1S8-9IYEY6c--h5xjhU9SwNQXPiy5QH-A1AK1GZK8ih4vg50IADbZA/exec";
-// =======================================================
-
-// Przypadki są zanonimizowane (P01–P40); mapowanie na przypadki badania zna tylko badacz.
-const N = 40;
-const PRZYPADKI = Array.from({ length: N }, (_, i) => "P" + String(i + 1).padStart(2, "0"));
-const CHOROBY = [
-  { kod: "Healthy",      pl: "Bez zmian patologicznych", opis: "zdjęcie prawidłowe, żadna z poniższych chorób" },
-  { kod: "Cardiomegaly", pl: "Kardiomegalia", opis: "powiększenie sylwetki serca" },
-  { kod: "Effusion",     pl: "Płyn w jamie opłucnej", opis: "wysięk opłucnowy" },
-  { kod: "Edema",        pl: "Obrzęk płuc", opis: "" },
-  { kod: "Pneumothorax", pl: "Odma opłucnowa", opis: "" },
+// Wersja 2 badania (3 XI 2026). Przypadki zanonimizowane (P01–P60), pozycje realizmu R01–R33;
+// mapowanie na metody zna tylko badacz (results/ankieta_nih/KLUCZ_nie_dla_oceniajacego.csv).
+// Wersja na GitHub Pages: bez logowania; odpowiedzi idą do Arkusza Google przez Google Apps Script
+// (config.js: API_URL; kod skryptu: tools/ankieta_nih/apps_script/Code.gs).
+const CHOROBY = {
+  Cardiomegaly: { pl: "kardiomegalia", dop: "kardiomegalii", narz: "kardiomegalią", opis: "powiększenie sylwetki serca" },
+  Effusion:     { pl: "płyn w jamie opłucnej", dop: "płynu w jamie opłucnej", narz: "płynem w jamie opłucnej", opis: "" },
+  Edema:        { pl: "obrzęk płuc", dop: "obrzęku płuc", narz: "obrzękiem płuc", opis: "" },
+};
+const LITERY = ["A", "B", "C", "D", "E", "F", "G"];
+const KROKI = ["O", ...LITERY, "K"];          // oryginał, wersje, podsumowanie
+const ZMIANY = [
+  ["brak", "brak"], ["urzadzenia", "urządzenia (dreny, elektrody, cewniki, rozrusznik)"],
+  ["opisy", "opisy i znaczniki (litery L/R, tekst)"], ["kosci", "kości"], ["tkanki", "tkanki miękkie"],
+  ["inna", "inna choroba"], ["kontrast", "ogólny kontrast lub jasność"], ["artefakty", "artefakty (szum, plamy, smugi, kolorowe piksele, siatka, rozmycie)"],
 ];
-const LITERY = ["A", "B", "C"];
-const STORAGE_KEY = "ankieta_kontrfakty_v3";
-const img = (id, w) => `img/${id}/${w.toLowerCase()}.png`;
 const $app = document.getElementById("app");
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-let S = load() || { sesja: null, oceniajacy: null, kolejnosc: null, idx: 0, odpowiedzi: {}, doWyslania: [] };
-S.doWyslania ||= [];
-function load() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; } }
-function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); } catch {} }
+let SEQ = [], NPRZ = 0;
+const PANEL = new URLSearchParams(location.search).has("panel");   // ?panel = panel badacza (hasło)
+let token = null, isOwner = PANEL;   // token = kod powrotu oceniającego (zamiast konta)
+let ODP = {};           // wszystkie odpowiedzi tego kodu: klucz <sesja>__<pozycja> → dokument
+let K = null;           // dokument konta: {sesje: {S1: {...}}, aktywna}
+let O = {};              // odpowiedzi aktywnej sesji: id pozycji → dokument
+let view = "survey";
+const ses = () => K?.aktywna ? K.sesje[K.aktywna] : null;
 
-// ---------- wysyłka do arkusza (kolejka ponawiana przy błędzie) ----------
-let sending = false;
-async function flush() {
-  if (!ENDPOINT || sending || !S.doWyslania.length) return updateSaveState();
-  sending = true; setSave("Wysyłanie…");
-  try {
-    while (S.doWyslania.length) {
-      const res = await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-                                          body: JSON.stringify(S.doWyslania[0]) });
-      const j = await res.json();
-      if (!j.ok) throw new Error(j.error);
-      S.doWyslania.shift(); save();
-    }
-  } catch { /* zostaje w kolejce; ponowimy przy następnym zapisie lub odświeżeniu */ }
-  sending = false; updateSaveState();
-}
-function updateSaveState() {
-  if (!ENDPOINT) return setSave("");
-  const n = S.doWyslania.length;
-  n ? setSave(`${n} niewysłane, ponowię`, true) : setSave(S.oceniajacy ? "Wysłano" : "");
-}
+// ---------- zapis: Arkusz Google (Apps Script). Kolejka w localStorage, wysyłana paczkami ----------
+// Każdy wpis to {rodzaj: "konto"|"odp", klucz, dane}; nowszy wpis o tym samym kluczu zastępuje starszy.
+// Gdy sieć nie działa, kolejka czeka w przeglądarce i wysyła się przy następnej próbie (co 15 s).
+const LSK = k => `ankieta_nih_v2_${k}`;
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(LSK(k))); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(LSK(k), JSON.stringify(v)); } catch {} };
 function setSave(t, err) { const el = document.getElementById("saveState"); el.textContent = t; el.classList.toggle("err", !!err); }
-window.addEventListener("online", flush);
-
-function rowFor(id) {
-  const o = S.odpowiedzi[id];
-  return { sesja: S.sesja, oceniajacy: S.oceniajacy.id, specjalizacja: S.oceniajacy.specjalizacja,
-    doswiadczenie_lata: S.oceniajacy.doswiadczenie_lata, kolejnosc: S.kolejnosc.indexOf(id) + 1, przypadek: id,
-    diagnoza_oryginalu: o.diagnoza, pewnosc: o.pewnosc ?? "", zmiana_A: o.A, zmiana_B: o.B, zmiana_C: o.C,
-    czas_s: o.czas_s ?? "", zapisano: o.zapisano ?? "", uwagi: o.uwagi || "" };
+async function api(params, body) {
+  const r = body
+    ? await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
+    : await fetch(API_URL + "?" + new URLSearchParams(params));
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.blad || "błąd serwera");
+  return j;
 }
-
-// ---------- deterministyczne tasowanie (seed = identyfikator sesji) ----------
-function rng(str) { let h = 2166136261; for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
-  return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }; }
-function shuffle(a, seed) { const r = rng(seed); a = a.slice();
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+let kolejka = {}, wysylanie = false, flushTimer = null, retryTimer = null;
+function enqueue(rodzaj, klucz, dane) {
+  kolejka[`${rodzaj}:${klucz}`] = { rodzaj, klucz, dane: JSON.parse(JSON.stringify(dane)) };
+  lsSet("kolejka_" + token, kolejka);
+  lsSet("kopia_" + token, { konto: K, odp: ODP });
+  clearTimeout(flushTimer); flushTimer = setTimeout(flush, 400);
+}
+async function flush() {
+  if (wysylanie || !token) return;
+  const wpisy = Object.entries(kolejka);
+  if (!wpisy.length) return;
+  wysylanie = true; setSave("Zapisywanie…");
+  try {
+    await api(null, { akcja: "zapisz", token, wpisy: wpisy.map(([, w]) => w) });
+    for (const [k, w] of wpisy) if (kolejka[k] === w) delete kolejka[k];   // nie kasuj, jeśli w trakcie przyszła nowsza wersja
+    lsSet("kolejka_" + token, kolejka);
+    setSave(Object.keys(kolejka).length ? "Zapisywanie…" : "Zapisano");
+  } catch (e) {
+    setSave("Brak połączenia — odpowiedzi czekają w przeglądarce, ponowię zapis", true);
+    clearTimeout(retryTimer); retryTimer = setTimeout(flush, 15000);
+  } finally {
+    wysylanie = false;
+    if (Object.keys(kolejka).length && !retryTimer) setTimeout(flush, 300);
+    retryTimer = null;
+  }
+}
+addEventListener("online", flush);
+addEventListener("beforeunload", e => { if (Object.keys(kolejka).length) { flush(); e.preventDefault(); e.returnValue = ""; } });
+let timers = {};
+function saveKonto() { const s = ses(); if (s) s.aktualizacja = new Date().toISOString(); enqueue("konto", "konto", K); }
+function saveItem(id, now) {
+  clearTimeout(timers[id]);
+  const go = () => { const o = O[id]; o.aktualizacja = new Date().toISOString();
+    ODP[`${K.aktywna}__${id}`] = o; enqueue("odp", `${K.aktywna}__${id}`, o); };
+  if (now) go(); else { setSave("Zmiany…"); timers[id] = setTimeout(go, 700); }
+}
+function nowyToken() {
+  const a = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", b = crypto.getRandomValues(new Uint8Array(10));
+  return Array.from(b, x => a[x % a.length]).join("");
+}
+async function wczytajKod(t) {      // dane oceniającego z arkusza; przy braku sieci kopia z przeglądarki
+  let konto = null, odp = [];
+  try { const j = await api({ akcja: "wczytaj", token: t }); konto = j.konto; odp = j.odp || []; }
+  catch (e) { const c = lsGet("kopia_" + t); if (!c) throw e; konto = c.konto; odp = Object.values(c.odp || {}); }
+  token = t; lsSet("token", t);
+  kolejka = lsGet("kolejka_" + t) || {};
+  K = konto ? JSON.parse(JSON.stringify(konto)) : { sesje: {}, aktywna: null }; K.sesje ||= {};
+  ODP = {}; for (const o of odp) ODP[`${o.sesja}__${o.pozycja}`] = o;
+  for (const w of Object.values(kolejka)) {        // niewysłane zmiany są nowsze niż arkusz
+    if (w.rodzaj === "konto") K = JSON.parse(JSON.stringify(w.dane)); else ODP[w.klucz] = w.dane;
+  }
+  if (Object.keys(kolejka).length) flush();
+}
 
 function updateHeader() {
-  const done = Object.values(S.odpowiedzi).filter(o => o.ukonczono).length;
-  document.getElementById("bar").style.width = (100 * done / N) + "%";
-  document.getElementById("counter").textContent = S.oceniajacy ? `${done}/${N}` : "";
-  document.getElementById("pauseBtn").hidden = !S.oceniajacy || S.pauza || S.idx >= N;
+  const s = ses(), n = SEQ.length;
+  const done = s ? SEQ.filter(it => O[it.id]?.ukonczono).length : 0;
+  document.getElementById("bar").style.width = (n ? 100 * done / n : 0) + "%";
+  const it = s && SEQ[s.idx];
+  document.getElementById("counter").textContent = s?.oceniajacy && it
+    ? (it.typ === "przypadek" ? `przypadek ${it.nr} z ${NPRZ}` : `pozycja ${s.idx + 1} z ${n}`) + ` · ${K.aktywna} · kod ${token}` : "";
+  const ob = document.getElementById("ownerBtn");
+  ob.hidden = !isOwner; ob.textContent = view === "owner" ? "Wróć do ankiety" : "Panel badacza";
 }
 
+// ---------- obrazy ----------
+const sprite = id => `img/${id}.png`;
+function filmStyle(id, kafel) {      // kafel: 0 = oryginał, 1–7 = A–G; null = pojedynczy obraz (realizm)
+  if (kafel == null) return `background-image:url(${sprite(id)});background-size:contain;background-position:center`;
+  return `background-image:url(${sprite(id)});background-size:${(LITERY.length + 1) * 100}% 100%;background-position:${kafel * 100 / LITERY.length}% 0`;
+}
+const preloaded = new Set();
+function preload(i) { const it = SEQ[i]; if (it && !preloaded.has(it.id)) { preloaded.add(it.id); new Image().src = sprite(it.id); } }
+
 // ---------- ekrany ----------
+function renderNoAccess(msg) { $app.innerHTML = `<div class="card"><h2>Nie można zapisywać odpowiedzi</h2><p>${msg}</p></div>`; }
+
 function renderStart() {
+  const istn = Object.entries(K.sesje || {});
   $app.innerHTML = `
     <div class="card">
-      <div class="eyebrow">NIH ChestX-ray14 · ${N} przypadków</div>
+      <div class="eyebrow">NIH ChestX-ray14 · ${NPRZ} przypadków · 3 choroby</div>
       <h2>Ocena zmodyfikowanych zdjęć RTG klatki piersiowej</h2>
-      <p>W każdym przypadku zobaczy Pan/Pani <b>oryginalne zdjęcie RTG</b> i oceni, czy jest <b>prawidłowe</b>,
-         czy widać na nim jedną z czterech chorób: kardiomegalię, płyn w jamie opłucnej, obrzęk płuc lub odmę.
-         Następnie pokażemy <b>trzy zmodyfikowane wersje</b> tego zdjęcia (A, B, C), wygenerowane przez algorytmy AI.
-         Każdą wersję prosimy ocenić w skali <b>0–10</b>: <b>na ile ta zmiana obrazu zmieniłaby Pana/Pani rozpoznanie</b>.</p>
-      <ul class="muted">
-        <li>Jeden przypadek zajmuje zwykle 1–2 minuty.</li>
-        <li>Obrazy mają 256×256 px (przeskalowane z oryginałów 1024×1024). Kliknięcie powiększa obraz.</li>
-        <li>Przytrzymanie obrazu wersji A/B/C pokazuje w tym miejscu oryginał, co ułatwia porównanie.</li>
-        <li>Odpowiedzi są wysyłane do zespołu badawczego po każdym przypadku. W dowolnym momencie można kliknąć
-            <b>Przerwij i zapisz</b> u góry strony i wrócić później tym samym linkiem w tej samej przeglądarce.</li>
+      <p>Model AI rozpoznaje na zdjęciach RTG kardiomegalię, płyn w jamie opłucnej i obrzęk płuc. Kilka algorytmów
+         próbowało zmienić każde zdjęcie tak, żeby <b>dodać</b> albo <b>usunąć</b> objawy jednej z tych chorób.
+         W każdym przypadku zobaczy Pan/Pani oryginał i <b>siedem zmodyfikowanych wersji (A–G)</b>, w losowej kolejności.</p>
+      <ul>
+        <li><b>Oryginał:</b> czy widać na nim daną chorobę.</li>
+        <li><b>Każda wersja:</b> czy objawy zostały dodane (usunięte), czy zmiana jest we właściwym miejscu,
+            co jeszcze się zmieniło (w tym artefakty: szum, plamy, kolorowe piksele) i czy obraz wygląda jak zdjęcie RTG tego samego pacjenta, z chorobą albo bez niej.</li>
+        <li><b>Na koniec:</b> która wersja wypadła najlepiej.</li>
+        <li>Co kilka przypadków pojawi się pojedynczy obraz do oceny realizmu, bez oryginału.</li>
       </ul>
+      <p class="muted"><b>Rozdzielczość:</b> obrazy mają 256 × 256 px (oryginały NIH 1024 px), pokazujemy je powiększone ×2.
+         To rozdzielczość badawcza, nie diagnostyczna. Drobne objawy, np. linie Kerleya, mogą być niewidoczne.
+         Przycisk „Przełącz” albo <kbd>spacja</kbd> podmienia wersję na oryginał w tym samym miejscu, co ułatwia
+         wychwycenie subtelnych zmian. Kliknięcie obrazu powiększa go.</p>
+      <p class="muted">Całość zajmuje ok. 2,5–3 godzin. Odpowiedzi zapisują się online na bieżąco: można przerwać w dowolnej
+         chwili i wrócić później. Na tym samym komputerze i w tej samej przeglądarce ankieta otworzy się tam, gdzie
+         Pan/Pani skończył(a). Na innym urządzeniu wystarczy wpisać <b>kod powrotu</b> (pokazujemy go po rozpoczęciu
+         i w nagłówku strony). Nie trzeba zakładać konta.</p>
+    </div>
+    ${token ? `<div class="card"><h3>Kod powrotu: <code style="font-size:20px">${token}</code></h3>
+      <p class="muted">Proszę go zapisać. Pozwala dokończyć ankietę na innym komputerze lub w innej przeglądarce.</p></div>`
+    : `<div class="card"><h3>Kontynuacja na innym urządzeniu</h3>
+      <form id="kodForm" class="row"><input type="text" id="kod" placeholder="kod powrotu, np. K7P2QX9MAB" autocomplete="off"
+        style="max-width:240px;text-transform:uppercase"><button type="submit">Wczytaj</button><span class="muted" id="kodMsg"></span></form></div>`}
+    ${istn.length ? `<div class="card"><h3>Zapisane sesje</h3><div class="tablewrap"><table><thead><tr><th>Sesja</th><th>Identyfikator</th><th>Postęp</th><th>Ostatni zapis</th><th></th></tr></thead><tbody>
+      ${istn.map(([k, s]) => `<tr><td>${k}</td><td>${esc(s.oceniajacy?.id)}</td><td>${s.ukonczone ?? 0}/${SEQ.length}</td>
+        <td>${s.aktualizacja ? new Date(s.aktualizacja).toLocaleString("pl-PL") : ""}</td>
+        <td><button class="primary" data-ses="${k}">Kontynuuj</button></td></tr>`).join("")}
+      </tbody></table></div></div>` : ""}
+    <div class="card">
+      <h3>${istn.length ? "Nowa sesja (ponowna, niezależna ocena)" : "Rozpoczęcie"}</h3>
       <form id="startForm">
-        <label class="field" for="rid">Identyfikator lub inicjały *</label>
-        <input type="text" id="rid" placeholder="np. LEK01" autocomplete="off">
+        <label class="field" for="rid">Identyfikator oceniającego *</label>
+        <input type="text" id="rid" placeholder="np. LEK01 (bez imienia i nazwiska)" autocomplete="off"
+               value="${esc(istn.length ? istn[istn.length - 1][1].oceniajacy?.id : "")}">
         <label class="field" for="spec">Specjalizacja</label>
-        <select id="spec">
-          <option value="">Wybierz</option>
-          <option>Radiologia (specjalista)</option><option>Radiologia (rezydent)</option>
-          <option>Choroby wewnętrzne</option><option>Pulmonologia</option><option>Kardiologia</option>
-          <option>Medycyna ratunkowa</option><option>Inna</option>
-        </select>
+        <select id="spec"><option value="">Wybierz</option>
+          <option>Radiologia (specjalista)</option><option>Radiologia (rezydent)</option><option>Choroby wewnętrzne</option>
+          <option>Pulmonologia</option><option>Kardiologia</option><option>Medycyna ratunkowa</option><option>Inna</option></select>
         <label class="field" for="exp">Doświadczenie w ocenie RTG klatki piersiowej (lata)</label>
         <input type="text" id="exp" inputmode="numeric" placeholder="np. 5" autocomplete="off">
-        <div class="row" style="margin-top:20px"><button class="primary" id="go" type="submit" disabled>Rozpocznij ankietę</button></div>
+        <div class="row" style="margin-top:20px"><button class="primary" id="go" type="submit">Rozpocznij ${istn.length ? "nową sesję" : "ankietę"}</button></div>
       </form>
     </div>`;
   const rid = document.getElementById("rid"), go = document.getElementById("go");
-  rid.oninput = () => go.disabled = !rid.value.trim();
-  document.getElementById("startForm").onsubmit = e => {
+  const chk = () => go.disabled = !rid.value.trim(); rid.oninput = chk; chk();
+  $app.querySelectorAll("[data-ses]").forEach(b => b.onclick = () => openSession(b.dataset.ses));
+  const kf = document.getElementById("kodForm");
+  if (kf) kf.onsubmit = async e => {
     e.preventDefault();
-    S.sesja = (crypto.randomUUID?.() || String(Math.random()).slice(2)).slice(0, 12);
-    S.oceniajacy = { id: rid.value.trim(), specjalizacja: document.getElementById("spec").value,
-                     doswiadczenie_lata: document.getElementById("exp").value.trim() };
-    S.kolejnosc = shuffle(PRZYPADKI, S.sesja);
-    S.idx = 0; save(); render();
+    const t = document.getElementById("kod").value.trim().toUpperCase(), msg = document.getElementById("kodMsg");
+    if (!/^[A-Z0-9]{8,40}$/.test(t)) { msg.textContent = "Nieprawidłowy kod."; return; }
+    msg.textContent = "Wczytywanie…";
+    try { await wczytajKod(t); } catch { msg.textContent = "Nie udało się połączyć. Spróbuj za chwilę."; return; }
+    if (!Object.keys(K.sesje).length) { msg.textContent = "Nie znaleziono zapisanych odpowiedzi dla tego kodu."; token = null; lsSet("token", null); return; }
+    if (K.aktywna && K.sesje[K.aktywna]) return openSession(K.aktywna);
+    render();
+  };
+  document.getElementById("startForm").onsubmit = async e => {
+    e.preventDefault();
+    if (!token) { token = nowyToken(); lsSet("token", token); kolejka = {}; ODP = {}; }
+    const k = "S" + (istn.length + 1);
+    K.sesje = K.sesje || {};
+    K.sesje[k] = { oceniajacy: { id: rid.value.trim(), specjalizacja: document.getElementById("spec").value,
+                   doswiadczenie_lata: document.getElementById("exp").value.trim() },
+                   start: new Date().toISOString(), idx: 0, ukonczone: 0 };
+    K.aktywna = k; O = {}; saveKonto(); render();
   };
 }
 
-function renderCase() {
-  const id = S.kolejnosc[S.idx];
-  const o = S.odpowiedzi[id] ||= { diagnoza: null, pewnosc: null, A: null, B: null, C: null, uwagi: "", krok: 1, t_start: Date.now() };
-  const nr = S.idx + 1;
-
-  if (o.krok !== 2) {
-    $app.innerHTML = `
-      <div class="card">
-        <div class="row"><h2>Przypadek ${nr} z ${N}</h2><span class="spacer"></span><span class="eyebrow">Krok 1 z 2 · rozpoznanie</span></div>
-        <div class="diag">
-          <img class="xray zoomable" src="${img(id, "o")}" alt="Oryginalne zdjęcie RTG">
-          <div>
-            <h3>Czy zdjęcie jest prawidłowe? Jeśli nie, jakie jest najbardziej prawdopodobne rozpoznanie?</h3>
-            <div class="options">
-              ${CHOROBY.map((c, i) => `
-                <label class="opt"><input type="radio" name="dx" id="dx${i}" value="${c.kod}" ${o.diagnoza === c.kod ? "checked" : ""}>
-                  <span>${c.pl}${c.opis ? `<small>${c.opis}</small>` : ""}</span></label>`).join("")}
-            </div>
-            <label class="field" for="conf">Pewność rozpoznania</label>
-            <select id="conf">
-              <option value="">Wybierz</option>
-              ${["niska", "średnia", "wysoka"].map(v => `<option ${o.pewnosc === v ? "selected" : ""}>${v}</option>`).join("")}
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <button id="prev" ${S.idx === 0 ? "disabled" : ""}>← Poprzedni</button>
-        <span class="spacer"></span>
-        <button class="primary" id="next" disabled>Dalej: wersje zmodyfikowane →</button>
-      </div>`;
-    const next = document.getElementById("next");
-    const check = () => next.disabled = !document.querySelector("input[name=dx]:checked");
-    document.querySelectorAll("input[name=dx]").forEach(r => r.onchange = check); check();
-    next.onclick = () => {
-      o.diagnoza = document.querySelector("input[name=dx]:checked").value;
-      o.pewnosc = document.getElementById("conf").value || null;
-      o.krok = 2; save(); render(); scrollTo(0, 0);
-    };
-    document.getElementById("prev").onclick = () => { S.idx--; save(); render(); };
-  } else {
-    const dx = CHOROBY.find(c => c.kod === o.diagnoza);
-    $app.innerHTML = `
-      <div class="card">
-        <div class="row"><h2>Przypadek ${nr} z ${N}</h2><span class="spacer"></span><span class="eyebrow">Krok 2 z 2 · wersje zmodyfikowane</span></div>
-        <div class="ref">
-          <img class="xray zoomable" src="${img(id, "o")}" alt="Oryginał">
-          <div><div class="muted">Oryginał. Pana/Pani rozpoznanie:</div><b>${dx.pl}</b>
-            <button class="link" id="changeDx">zmień</button></div>
-        </div>
-        <p class="hint">Dla każdej wersji: <b>na ile zmiana obrazu zmienia Pana/Pani rozpoznanie</b> w porównaniu z oryginałem?
-          0 = rozpoznanie bez zmian, 10 = rozpoznanie całkowicie zmienione (np. zdjęcie prawidłowe stało się chorobowe
-          albo odwrotnie). Przytrzymaj obraz, aby zobaczyć oryginał.</p>
-        <div class="cfs">
-          ${LITERY.map(L => `
-            <div class="cf">
-              <h3><span>Wersja ${L}</span><span class="val ${o[L] == null ? "empty" : ""}" id="v${L}">${o[L] ?? "nie oceniono"}</span></h3>
-              <div class="imgwrap">
-                <img class="xray zoomable" src="${img(id, L)}" data-cf="${img(id, L)}" data-orig="${img(id, "o")}" alt="Wersja ${L}" draggable="false">
-                <span class="tag" hidden>ORYGINAŁ</span>
-              </div>
-              <div class="scale">
-                <input type="range" id="r${L}" min="0" max="10" step="1" value="${o[L] ?? 5}" data-l="${L}"
-                       class="${o[L] == null ? "untouched" : ""}" aria-label="Zmiana rozpoznania, wersja ${L}">
-                <div class="ends"><span>0 · bez zmiany</span><span>5</span><span>10 · całkowita zmiana</span></div>
-              </div>
-            </div>`).join("")}
-        </div>
-        <label class="field" for="uwagi">Uwagi do przypadku (opcjonalnie)</label>
-        <textarea id="uwagi" placeholder="np. artefakty, nierealistyczna anatomia, inna patologia">${esc(o.uwagi)}</textarea>
-      </div>
-      <div class="row">
-        <button id="back">← Wróć do rozpoznania</button>
-        <span class="spacer"></span>
-        <button class="primary" id="next" disabled>${S.idx === N - 1 ? "Zapisz i zakończ" : "Zapisz i dalej →"}</button>
-      </div>`;
-    const next = document.getElementById("next");
-    const check = () => next.disabled = LITERY.some(L => o[L] == null);
-    document.querySelectorAll("input[type=range]").forEach(r => {
-      const set = () => { const L = r.dataset.l; o[L] = +r.value; r.classList.remove("untouched");
-        const v = document.getElementById("v" + L); v.textContent = r.value; v.classList.remove("empty"); save(); check(); };
-      r.oninput = set; r.onclick = set;
-    });
-    check();
-    document.getElementById("uwagi").oninput = e => { o.uwagi = e.target.value; save(); };
-    const toStep1 = () => { o.krok = 1; save(); render(); };
-    document.getElementById("changeDx").onclick = toStep1;
-    document.getElementById("back").onclick = toStep1;
-    next.onclick = () => {
-      o.ukonczono = true; o.czas_s = Math.round((Date.now() - o.t_start) / 1000); o.zapisano = new Date().toISOString();
-      S.doWyslania.push(rowFor(id));   // poprawka wcześniejszego przypadku wysyła nowy wiersz; w analizie bierzemy najnowszy
-      S.idx = Math.min(S.idx + 1, N); save(); flush(); render(); scrollTo(0, 0);
-    };
-    bindCompare();
-  }
-  bindZoom();
+function openSession(k) {
+  K.aktywna = k; O = {};
+  for (const [kl, o] of Object.entries(ODP)) if (kl.startsWith(k + "__")) O[o.pozycja] = JSON.parse(JSON.stringify(o));
+  saveKonto(); render();
 }
 
-function renderEnd() {
-  const ids = S.kolejnosc.filter(id => S.odpowiedzi[id]?.ukonczono);
-  const pending = ENDPOINT ? S.doWyslania.length : ids.length;
+function nowy(it) {
+  const s = ses();
+  return it.typ === "realizm"
+    ? { sesja: K.aktywna, oceniajacy: s.oceniajacy.id, pozycja: it.id, typ: "realizm", realizm: null, t_start: Date.now() }
+    : { sesja: K.aktywna, oceniajacy: s.oceniajacy.id, pozycja: it.id, typ: "przypadek", choroba: it.choroba,
+        kierunek: it.kierunek, krok: "O", oryginal: null, wersje: {}, najlepsza: null, uwagi: "", t_start: Date.now() };
+}
+
+function go(delta) {
+  const s = ses(); s.idx = Math.max(0, Math.min(SEQ.length, s.idx + delta));
+  s.ukonczone = SEQ.filter(it => O[it.id]?.ukonczono).length;
+  saveKonto(); render(); scrollTo(0, 0);
+}
+function finishItem(o) {
+  if (!o.ukonczono) { o.ukonczono = true; o.czas_s = Math.round((Date.now() - o.t_start) / 1000); }
+  o.zapisano = new Date().toISOString();
+  saveItem(o.pozycja, true); go(1);
+}
+
+function seg(name, opts, val, num) {
+  return `<div class="seg ${num ? "num" : ""}" role="radiogroup">${opts.map(([v, t]) =>
+    `<label><input type="radio" name="${name}" value="${v}" ${String(val) === String(v) ? "checked" : ""}>${t}</label>`).join("")}</div>`;
+}
+const SKALA = [1, 2, 3, 4, 5].map(v => [v, v]);
+
+function renderRealizm(it) {
+  const s = ses(), o = O[it.id] ||= nowy(it);
   $app.innerHTML = `
     <div class="card">
-      <h2>Dziękujemy!</h2>
-      <p>Oceniono <b>${ids.length}</b> z ${N} przypadków.
-        ${pending ? `<b>${pending} odpowiedzi nie udało się jeszcze wysłać.</b> Prosimy pobrać plik CSV i przesłać go badaczowi.`
-                  : "Wszystkie odpowiedzi zostały wysłane do zespołu badawczego. Nie trzeba niczego przesyłać."}</p>
-      <div class="row">
-        <button class="${pending ? "primary" : ""}" id="csv">Pobierz kopię odpowiedzi (CSV)</button>
-        ${ENDPOINT && pending ? `<button id="retry">Spróbuj wysłać ponownie</button>` : ""}
-        <span class="spacer"></span>
-        <button id="review">← Przejrzyj lub popraw odpowiedzi</button>
+      <div class="row"><h2>Ocena realizmu</h2><span class="spacer"></span><span class="eyebrow">pozycja ${s.idx + 1} z ${SEQ.length}</span></div>
+      <p class="muted">Pojedynczy obraz, bez oryginału do porównania. Może być prawdziwym zdjęciem albo wersją zmodyfikowaną.</p>
+      <div class="vlayout">
+        <div class="film single zoomable" data-id="${it.id}" style="${filmStyle(it.id, null)}"></div>
+        <div>
+          <div class="q"><div class="qt">Czy obraz wygląda jak prawdziwe zdjęcie RTG?</div>
+            ${seg("rz", SKALA, o.realizm, true)}
+            <div class="ends"><span>1 · wyraźnie sztuczny</span><span>5 · nie do odróżnienia</span></div></div>
+        </div>
       </div>
     </div>
-    <div class="card tablewrap">
-      <table><thead><tr><th>#</th><th>Rozpoznanie</th><th>Pewność</th><th>A</th><th>B</th><th>C</th></tr></thead>
-      <tbody>${ids.map(id => { const o = S.odpowiedzi[id];
-        return `<tr><td>${S.kolejnosc.indexOf(id) + 1}</td><td>${CHOROBY.find(c => c.kod === o.diagnoza).pl}</td>
-        <td>${o.pewnosc ?? ""}</td><td>${o.A}</td><td>${o.B}</td><td>${o.C}</td></tr>`; }).join("")}</tbody></table>
-    </div>`;
-  document.getElementById("csv").onclick = downloadCSV;
-  document.getElementById("retry")?.addEventListener("click", async () => { await flush(); render(); });
-  document.getElementById("review").onclick = () => { S.idx = N - 1; save(); render(); };
+    <div class="row"><button id="prev" ${s.idx === 0 ? "disabled" : ""}>← Wstecz</button><span class="spacer"></span>
+      <button class="primary" id="next" ${o.realizm == null ? "disabled" : ""}>Zapisz i dalej →</button></div>`;
+  $app.querySelectorAll("input[name=rz]").forEach(r => r.onchange = () => {
+    o.realizm = +r.value; o.t = new Date().toISOString(); document.getElementById("next").disabled = false; saveItem(it.id); });
+  document.getElementById("prev").onclick = () => go(-1);
+  document.getElementById("next").onclick = () => finishItem(o);
+  bindZoom(); preload(s.idx + 1);
 }
 
-// ---------- przerwa: zapis dotychczasowych wyników i wyjście ----------
-function renderPause() {
-  const done = S.kolejnosc.filter(id => S.odpowiedzi[id]?.ukonczono).length;
-  const pending = ENDPOINT ? S.doWyslania.length : done;
-  const inProgress = S.idx < N && !S.odpowiedzi[S.kolejnosc[S.idx]]?.ukonczono && S.odpowiedzi[S.kolejnosc[S.idx]];
+function wersjaKompletna(o, L) {
+  const w = o.wersje[L]; if (!w) return false;
+  if (w.q1 == null || !w.q2 || !(w.q3 || []).length || w.q4 == null) return false;
+  if (w.q1 >= 3) {
+    if (o.choroba === "Cardiomegaly" && !w.card_co) return false;
+    if (o.choroba === "Effusion" && (!w.eff_strona || !w.eff_menisk)) return false;
+    if (o.choroba === "Edema" && !(w.edem_inne || []).length) return false;
+  }
+  return true;
+}
+const krokGotowy = (o, k) => k === "O" ? !!o.oryginal : k === "K" ? !!o.najlepsza : wersjaKompletna(o, k);
+
+function renderCase(it) {
+  const s = ses(), o = O[it.id] ||= nowy(it);
+  const ch = CHOROBY[it.choroba], add = it.kierunek === "add";
+  const zad = add
+    ? `Zdjęcie bez ${ch.dop} według modelu AI. Wersje A–G miały <b>dodać</b> objawy ${ch.dop}.`
+    : `Zdjęcie z ${ch.narz} według modelu AI. Wersje A–G miały <b>usunąć</b> objawy ${ch.dop}.`;
+  const k = o.krok, dostep = kk => kk === "O" || !!o.oryginal;
+  const tabs = KROKI.map(kk => `<button class="tab ${kk === k ? "cur" : ""} ${krokGotowy(o, kk) ? "done" : ""}" data-k="${kk}"
+      ${dostep(kk) ? "" : "disabled"}>${kk === "O" ? "Oryginał" : kk === "K" ? "Podsumowanie" : "Wersja " + kk}</button>`).join("");
+  let body = "";
+  if (k === "O") {
+    body = `<div class="vlayout">
+      <div class="film zoomable" data-id="${it.id}" data-k="0" style="${filmStyle(it.id, 0)}"><span class="tag">ORYGINAŁ</span></div>
+      <div><div class="q"><div class="qt">Czy na oryginale widoczne są objawy ${ch.dop}?${ch.opis ? ` <small>(${ch.opis})</small>` : ""}</div>
+        ${seg("q0", [["tak", "tak"], ["nie", "nie"], ["nie_da_sie", "nie da się ocenić"]], o.oryginal)}</div>
+        <p class="muted">Ocena samego oryginału, niezależnie od zdania modelu AI.</p></div></div>`;
+  } else if (k === "K") {
+    body = `<div class="q" style="margin-top:14px"><div class="qt">Która wersja najlepiej realizuje zadanie przy najmniejszych zmianach ubocznych?</div>
+        ${seg("q5", [...LITERY.map(L => [L, L]), ["zadna", "żadna"]], o.najlepsza)}</div>
+      <div class="q"><label class="qt" for="uwagi">Uwagi do przypadku <small>(opcjonalnie)</small></label>
+        <textarea id="uwagi" placeholder="np. artefakty, nierealistyczna anatomia, inna patologia">${esc(o.uwagi)}</textarea></div>
+      <div class="tablewrap"><table><thead><tr><th>Wersja</th><th>Realizacja</th><th>Miejsce</th><th>Ten sam pacjent</th></tr></thead><tbody>
+        ${LITERY.map(L => { const w = o.wersje[L] || {}; return `<tr><td>${L}</td><td>${w.q1 ?? "–"}</td><td>${esc(w.q2 ?? "–").replace("_", " ")}</td><td>${w.q4 ?? "–"}</td></tr>`; }).join("")}
+      </tbody></table></div>`;
+  } else {
+    const L = k, j = LITERY.indexOf(L) + 1, w = o.wersje[L] ||= { q3: [] };
+    body = `<div class="vlayout">
+      <div>
+        <div class="pair">
+          <figure><figcaption>Oryginał</figcaption><div class="film zoomable" data-id="${it.id}" data-k="0" style="${filmStyle(it.id, 0)}"></div></figure>
+          <figure><figcaption>Wersja ${L}</figcaption><div class="film zoomable" id="flip" data-id="${it.id}" data-k="${j}" style="${filmStyle(it.id, j)}"><span class="tag" id="flipTag">WERSJA ${L}</span></div></figure>
+        </div>
+        <div class="tools"><button type="button" id="flipBtn">Przełącz oryginał ↔ ${L}</button>
+          <span class="muted"><kbd>spacja</kbd> przełącza · przytrzymanie pokazuje oryginał · kliknięcie powiększa</span></div>
+      </div>
+      <div id="qs">
+        <div class="q"><div class="qt">1. Czy na tej wersji widać ${add ? "dodanie" : "usunięcie"} objawów ${ch.dop}?</div>
+          ${seg("q1", SKALA, w.q1, true)}<div class="ends"><span>1 · wcale</span><span>5 · wyraźnie i typowo</span></div>
+          <div id="spec"></div></div>
+        <div class="q"><div class="qt">2. Czy zmiana jest tam, gdzie powinna być dla tej choroby?</div>
+          ${seg("q2", [["tak", "tak"], ["czesciowo", "częściowo"], ["nie", "nie"], ["brak_zmiany", "brak zmiany"]], w.q2)}</div>
+        <div class="q"><div class="qt">3. Zmiany uboczne <small>(można zaznaczyć kilka)</small></div>
+          <div class="seg">${ZMIANY.map(([v, t]) => `<label><input type="checkbox" name="q3" value="${v}" ${(w.q3 || []).includes(v) ? "checked" : ""}>${t}</label>`).join("")}</div>
+          <input type="text" id="q3inna" placeholder="jaka inna choroba?" value="${esc(w.q3_inna)}" ${(w.q3 || []).includes("inna") ? "" : "hidden"} style="margin-top:6px">
+          <p class="muted" style="margin:6px 0 0;font-size:13px"><b>Artefakty</b> to ślady pracy algorytmu, których nie ma na prawdziwym RTG:
+            ziarnisty szum, plamy lub smugi, piksele w innym kolorze niż odcienie szarości, regularna siatka lub
+            szachownica, rozmyte albo „rozmazane” fragmenty, ostre nienaturalne granice, powielone struktury.</p></div>
+        <div class="q"><div class="qt">4. Czy obraz wygląda jak zdjęcie RTG <b>tego samego pacjenta</b> (z tą chorobą albo bez niej)?</div>
+          ${seg("q4", SKALA, w.q4, true)}<div class="ends"><span>1 · sztuczny albo inny pacjent</span><span>5 · wiarygodne zdjęcie tego pacjenta</span></div></div>
+      </div></div>`;
+  }
+  const idxK = KROKI.indexOf(k);
   $app.innerHTML = `
     <div class="card">
-      <div class="eyebrow">Ankieta przerwana</div>
-      <h2>Zapisano ${done} z ${N} przypadków</h2>
-      <p>${pending
-        ? `<b>${pending} odpowiedzi nie udało się jeszcze wysłać.</b> Zostaną wysłane automatycznie po powrocie do ankiety.
-           Można też pobrać plik CSV i przesłać go badaczowi.`
-        : "Wszystkie ukończone przypadki zostały wysłane do zespołu badawczego."}
-        ${inProgress ? " Rozpoczęty przypadek nie został jeszcze wysłany; dokończy go Pan/Pani po powrocie." : ""}</p>
-      <p>Aby kontynuować później, wystarczy otworzyć ten sam link <b>w tej samej przeglądarce</b>.
-         Ankieta wznowi się od przypadku ${Math.min(S.idx + 1, N)}. Można teraz bezpiecznie zamknąć kartę.</p>
-      <div class="row">
-        <button class="primary" id="resume">Kontynuuj ankietę</button>
-        <button id="csv" ${done ? "" : "disabled"}>Pobierz kopię odpowiedzi (CSV)</button>
-      </div>
+      <div class="row"><h2>Przypadek ${it.nr} z ${NPRZ}: ${ch.pl}</h2><span class="spacer"></span><span class="eyebrow">pozycja ${s.idx + 1} z ${SEQ.length}</span></div>
+      <p class="task">${zad}</p>
+      <div class="tabs">${tabs}</div>
+      ${body}
+    </div>
+    <div class="row">
+      <button id="prev">← ${idxK === 0 ? (s.idx === 0 ? "Wstecz" : "Poprzednia pozycja") : "Wstecz"}</button>
+      <span class="spacer"></span><span class="missing" id="missing"></span>
+      <button class="primary" id="next">${k === "K" ? "Zapisz przypadek i dalej →" : k === LITERY.at(-1) ? "Dalej: podsumowanie →" : k === "O" ? "Dalej: wersja A →" : `Dalej: wersja ${LITERY[idxK]} →`}</button>
     </div>`;
-  document.getElementById("resume").onclick = () => { S.pauza = false; save(); flush(); render(); };
-  document.getElementById("csv").onclick = downloadCSV;
-}
-document.getElementById("pauseBtn").onclick = async () => {
-  S.pauza = true; save(); render(); scrollTo(0, 0);
-  await flush(); if (S.pauza) render();
-};
+  if (s.idx === 0 && idxK === 0) document.getElementById("prev").disabled = true;
 
-function downloadCSV() {
-  const ids = S.kolejnosc.filter(id => S.odpowiedzi[id]?.ukonczono);
+  const next = document.getElementById("next");
+  const check = () => { const ok = krokGotowy(o, k); next.disabled = !ok;
+    document.getElementById("missing").textContent = ok ? "" : "Uzupełnij odpowiedzi, aby przejść dalej"; };
+  const ruch = kk => { o.krok = kk; saveItem(it.id, true); render(); scrollTo(0, 0); };
+  $app.querySelectorAll(".tab").forEach(b => b.onclick = () => ruch(b.dataset.k));
+  document.getElementById("prev").onclick = () => idxK === 0 ? go(-1) : ruch(KROKI[idxK - 1]);
+  next.onclick = () => k === "K" ? finishItem(o) : ruch(KROKI[idxK + 1]);
+
+  if (k === "O") $app.querySelectorAll("input[name=q0]").forEach(r => r.onchange = () => {
+    o.oryginal = r.value; o.t_oryginal = new Date().toISOString(); saveItem(it.id); check(); renderTabsState(o); });
+  if (k === "K") {
+    $app.querySelectorAll("input[name=q5]").forEach(r => r.onchange = () => { o.najlepsza = r.value; saveItem(it.id); check(); });
+    document.getElementById("uwagi").oninput = e => { o.uwagi = e.target.value; saveItem(it.id); };
+  }
+  if (LITERY.includes(k)) bindVersion(o, k, check);
+  check(); bindZoom(); preload(s.idx + 1);
+}
+function renderTabsState(o) { $app.querySelectorAll(".tab").forEach(b => { b.disabled = b.dataset.k !== "O" && !o.oryginal;
+  b.classList.toggle("done", krokGotowy(o, b.dataset.k)); }); }
+
+function bindVersion(o, L, check) {
+  const w = o.wersje[L], id = o.pozycja;
+  const touch = () => { w.t = new Date().toISOString(); saveItem(id); check(); renderTabsState(o); };
+  const specBox = document.getElementById("spec");
+  const renderSpec = () => {
+    if (!(w.q1 >= 3)) { specBox.innerHTML = ""; return; }
+    let h = "";
+    if (o.choroba === "Cardiomegaly") h = `
+      <div class="qt">Co się zmienia?</div>
+      ${seg("card_co", [["sylwetka", "sylwetka serca"], ["inne", "raczej przepona, wdech albo ułożenie"], ["oba", "jedno i drugie"], ["trudno", "trudno ocenić"]], w.card_co)}
+      <div class="qt">Szacowany CTR <small>(opcjonalnie, 0,3–0,8)</small></div>
+      <div class="ctr"><label>oryginał<input type="number" id="ctr_o" min="0.3" max="0.8" step="0.01" value="${w.ctr_oryginal ?? ""}"></label>
+        <label>wersja ${L}<input type="number" id="ctr_w" min="0.3" max="0.8" step="0.01" value="${w.ctr_wersja ?? ""}"></label></div>`;
+    if (o.choroba === "Effusion") h = `
+      <div class="qt">Strona zmiany</div>${seg("eff_strona", [["lewa", "lewa"], ["prawa", "prawa"], ["obie", "obie"]], w.eff_strona)}
+      <div class="qt">Czy widać objaw menisku albo zatarcie kąta przeponowo-żebrowego?</div>
+      ${seg("eff_menisk", [["tak", "tak"], ["nie", "nie"], ["niepewne", "niepewne"]], w.eff_menisk)}`;
+    if (o.choroba === "Edema") h = `
+      <div class="qt">Czy przy okazji zmieniła się sylwetka serca lub pojawił się płyn? <small>(można kilka)</small></div>
+      <div class="seg">${[["nie", "nie"], ["serce", "sylwetka serca"], ["plyn", "płyn w jamie opłucnej"]].map(([v, t]) =>
+        `<label><input type="checkbox" name="edem_inne" value="${v}" ${(w.edem_inne || []).includes(v) ? "checked" : ""}>${t}</label>`).join("")}</div>`;
+    specBox.innerHTML = `<div class="sub">${h}</div>`;
+    specBox.querySelectorAll("input[type=radio]").forEach(r => r.onchange = () => { w[r.name] = r.value; touch(); });
+    specBox.querySelectorAll("input[name=edem_inne]").forEach(c => c.onchange = () => {
+      let v = [...specBox.querySelectorAll("input[name=edem_inne]:checked")].map(x => x.value);
+      if (c.checked && c.value === "nie") v = ["nie"]; else if (c.checked) v = v.filter(x => x !== "nie");
+      specBox.querySelectorAll("input[name=edem_inne]").forEach(x => x.checked = v.includes(x.value));
+      w.edem_inne = v; touch(); });
+    [["ctr_o", "ctr_oryginal"], ["ctr_w", "ctr_wersja"]].forEach(([el, f]) => { const e = document.getElementById(el);
+      if (e) e.oninput = () => { const x = parseFloat(e.value.replace(",", ".")); w[f] = isFinite(x) ? x : null; touch(); }; });
+  };
+  $app.querySelectorAll("#qs input[name=q1]").forEach(r => r.onchange = () => { w.q1 = +r.value; renderSpec(); touch(); });
+  $app.querySelectorAll("#qs input[name=q2]").forEach(r => r.onchange = () => { w.q2 = r.value; touch(); });
+  $app.querySelectorAll("#qs input[name=q4]").forEach(r => r.onchange = () => { w.q4 = +r.value; touch(); });
+  const inna = document.getElementById("q3inna");
+  $app.querySelectorAll("#qs input[name=q3]").forEach(c => c.onchange = () => {
+    let v = [...$app.querySelectorAll("#qs input[name=q3]:checked")].map(x => x.value);
+    if (c.checked && c.value === "brak") v = ["brak"]; else if (c.checked) v = v.filter(x => x !== "brak");
+    $app.querySelectorAll("#qs input[name=q3]").forEach(x => x.checked = v.includes(x.value));
+    w.q3 = v; inna.hidden = !v.includes("inna"); touch(); });
+  inna.oninput = () => { w.q3_inna = inna.value; touch(); };
+  renderSpec();
+
+  // przełączanie oryginał ↔ wersja w tym samym miejscu
+  const f = document.getElementById("flip"), tag = document.getElementById("flipTag"), j = LITERY.indexOf(L) + 1;
+  let pokazOryg = false, held = false, timer;
+  const set = v => { pokazOryg = v; f.style.backgroundPosition = `${(v ? 0 : j) * 20}% 0`;
+    tag.textContent = v ? "ORYGINAŁ" : "WERSJA " + L; tag.classList.toggle("alt", v); };
+  flipCurrent = () => set(!pokazOryg);
+  document.getElementById("flipBtn").onclick = flipCurrent;
+  f.addEventListener("pointerdown", e => { timer = setTimeout(() => { held = true; set(true); }, 180); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => f.addEventListener(ev, () => { clearTimeout(timer); if (held) set(false); }));
+  f.addEventListener("click", e => { if (held) { e.stopImmediatePropagation(); held = false; } }, true);
+  f.addEventListener("contextmenu", e => e.preventDefault());
+}
+let flipCurrent = null;
+
+// ---------- powiększenie z przełączaniem ----------
+const lb = document.getElementById("lightbox"), lbFilm = document.getElementById("lbFilm"), lbTag = document.getElementById("lbTag");
+let lbStan = null;
+function lbSet() {
+  const { id, k, alt } = lbStan, kk = alt ? 0 : k;
+  lbFilm.setAttribute("style", filmStyle(id, kk));
+  lbTag.textContent = kk == null ? "" : kk === 0 ? "ORYGINAŁ" : "WERSJA " + LITERY[kk - 1];
+  lbTag.hidden = kk == null; lbTag.classList.toggle("alt", !!alt);
+  document.getElementById("lbFlip").hidden = !(k > 0);
+}
+function bindZoom() {
+  $app.querySelectorAll(".zoomable").forEach(el => el.addEventListener("click", () => {
+    const k = el.dataset.k == null ? null : +el.dataset.k;
+    lbStan = { id: el.dataset.id, k, alt: false }; lbSet(); lb.hidden = false; }));
+}
+lbFilm.onclick = () => lb.hidden = true;
+document.getElementById("lbClose").onclick = () => lb.hidden = true;
+document.getElementById("lbFlip").onclick = () => { lbStan.alt = !lbStan.alt; lbSet(); };
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { lb.hidden = true; return; }
+  if (e.key !== " ") return;
+  const t = e.target;      // spacja w polu tekstowym pisze, na przycisku go klika
+  if (/^(TEXTAREA|SELECT|BUTTON)$/.test(t.tagName) || t.tagName === "INPUT" && !/^(radio|checkbox)$/.test(t.type)) return;
+  if (!lb.hidden && lbStan?.k > 0) { e.preventDefault(); lbStan.alt = !lbStan.alt; lbSet(); }
+  else if (lb.hidden && flipCurrent && document.getElementById("flip")) { e.preventDefault(); flipCurrent(); }
+});
+
+function renderEnd() {
+  const s = ses(), n = SEQ.filter(it => O[it.id]?.ukonczono).length;
+  const brak = SEQ.map((it, i) => [it, i]).filter(([it]) => !O[it.id]?.ukonczono);
+  $app.innerHTML = `
+    <div class="card">
+      <h2>${brak.length ? "Koniec listy" : "Dziękujemy!"}</h2>
+      <p>Ukończono <b>${n}</b> z ${SEQ.length} pozycji w sesji ${K.aktywna}. Odpowiedzi są zapisane online i są widoczne
+         dla zespołu badawczego. Nie trzeba niczego wysyłać. Kod powrotu: <code>${token}</code>.</p>
+      ${brak.length ? `<p>Nieukończone pozycje: ${brak.slice(0, 30).map(([it, i]) => `<button class="link" data-i="${i}">${i + 1}</button>`).join(", ")}${brak.length > 30 ? "…" : ""}</p>` : ""}
+      <div class="row"><button id="review">← Wróć do ostatniej pozycji</button><button id="toStart">Lista sesji</button></div>
+    </div>`;
+  document.getElementById("review").onclick = () => { s.idx = SEQ.length - 1; saveKonto(); render(); };
+  document.getElementById("toStart").onclick = () => { K.aktywna = null; saveKonto(); render(); };
+  $app.querySelectorAll("[data-i]").forEach(b => b.onclick = () => { s.idx = +b.dataset.i; saveKonto(); render(); });
+}
+
+// ---------- panel badacza (tylko właściciel) ----------
+let allKonta = [], allOdp = [], haslo = "";
+async function loadOwner() {
+  const j = await api({ akcja: "eksport", haslo });
+  allKonta = j.konta.map(k => ({ uid: k.token, ...k.dane }));
+  allOdp = j.odp.map(o => ({ uid: o.token, ...o.dane }));
+}
+async function renderOwner() {
+  if (!haslo) {
+    $app.innerHTML = `<div class="card"><h2>Panel badacza</h2><form id="hf" class="row">
+      <input type="password" id="haslo" placeholder="hasło z Apps Script (HASLO)" style="max-width:280px">
+      <button class="primary" type="submit">Wczytaj odpowiedzi</button></form></div>`;
+    document.getElementById("hf").onsubmit = e => { e.preventDefault(); haslo = document.getElementById("haslo").value; renderOwner(); };
+    return;
+  }
+  $app.innerHTML = `<div class="card"><p class="muted">Wczytywanie odpowiedzi wszystkich oceniających…</p></div>`;
+  try { await loadOwner(); } catch (e) { const m = esc(e?.message || e); haslo = "";
+    $app.innerHTML = `<div class="card"><p>Nie udało się wczytać odpowiedzi (${m}).</p><button id="znow">Spróbuj ponownie</button></div>`;
+    document.getElementById("znow").onclick = renderOwner; return; }
+  const rows = allRows();
+  const sesje = allKonta.flatMap(k => Object.entries(k.sesje || {}).map(([sid, s]) => ({ k, sid, s })));
+  $app.innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Wymaga hasła badacza</div>
+      <h2>Panel badacza</h2>
+      <p class="muted">Odpowiedzi są w Arkuszu Google (zakładki <code>v2_konta</code> i <code>v2_odpowiedzi</code>). Każdy kod powrotu
+        widzi tylko swoje odpowiedzi. Kolumna <code>przypadek</code>
+        to identyfikator anonimowy (P01–P60, R01–R33). Połącz go z <code>KLUCZ_nie_dla_oceniajacego.csv</code>
+        i <code>kontrole_realizmu_KLUCZ.csv</code> w <code>results/ankieta_nih/</code>, np. skryptem <code>tools/ankieta_nih/analiza.py</code>.</p>
+      <div class="row">
+        <button class="primary" id="dlCsv" ${rows.length ? "" : "disabled"}>Pobierz odpowiedzi (CSV)</button>
+        <button id="dlJson" ${allOdp.length ? "" : "disabled"}>Pobierz surowe dane (JSON)</button>
+        <button id="odswiez">Odśwież</button>
+        <span class="muted" id="dlMsg"></span>
+      </div>
+      <textarea class="csv" id="csvBox" readonly hidden></textarea>
+    </div>
+    <div class="card tablewrap">
+      ${sesje.length ? `<table><thead><tr><th>Kod</th><th>Sesja</th><th>Identyfikator</th><th>Specjalizacja</th><th>Lata</th><th>Postęp</th><th>Ostatni zapis</th></tr></thead><tbody>
+        ${sesje.map(({ k, sid, s }) => `<tr><td><code>${esc(k.uid)}</code></td><td>${sid}</td><td>${esc(s.oceniajacy?.id)}</td>
+          <td>${esc(s.oceniajacy?.specjalizacja)}</td><td>${esc(s.oceniajacy?.doswiadczenie_lata)}</td>
+          <td><span class="pill ${s.ukonczone === SEQ.length ? "done" : ""}">${s.ukonczone ?? 0}/${SEQ.length}</span></td>
+          <td>${s.aktualizacja ? new Date(s.aktualizacja).toLocaleString("pl-PL") : ""}</td></tr>`).join("")}
+        </tbody></table>`
+      : `<p class="muted">Nikt jeszcze nie zaczął ankiety. Wyślij lekarzom link do strony (bez <code>?panel</code>).</p>`}
+    </div>`;
+  const stamp = new Date().toISOString().slice(0, 10);
+  document.getElementById("dlCsv").onclick = () => offer(`ankieta_nih_v2_odpowiedzi_${stamp}.csv`, toCSV(rows));
+  document.getElementById("dlJson").onclick = () => offer(`ankieta_nih_v2_surowe_${stamp}.json`,
+    JSON.stringify({ konta: allKonta, odpowiedzi: allOdp }, null, 1));
+  document.getElementById("odswiez").onclick = renderOwner;
+}
+function offer(filename, data) {
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([toCSV(ids.map(rowFor))], { type: "text/csv;charset=utf-8" }));
-  a.download = `oceny_${S.oceniajacy.id.replace(/[^\w-]+/g, "_")}.csv`; a.click();
+  a.href = URL.createObjectURL(new Blob([data], { type: filename.endsWith(".csv") ? "text/csv" : "application/json" }));
+  a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  document.getElementById("dlMsg").textContent = "Plik pobrany.";
+}
+function allRows() {
+  const poz = Object.fromEntries(SEQ.map((it, i) => [it.id, i + 1]));
+  const konto = Object.fromEntries(allKonta.map(k => [k.uid, k]));
+  return allOdp.filter(o => o.ukonczono || o.oryginal || o.realizm != null).flatMap(o => {
+    const s = konto[o.uid]?.sesje?.[o.sesja] || {};
+    const base = { konto: o.uid, oceniajacy: s.oceniajacy?.id ?? o.oceniajacy, specjalizacja: s.oceniajacy?.specjalizacja ?? "",
+      doswiadczenie_lata: s.oceniajacy?.doswiadczenie_lata ?? "", sesja: o.sesja, pozycja: poz[o.pozycja] ?? "",
+      przypadek: o.pozycja, typ: o.typ, choroba: o.choroba ?? "", kierunek: o.kierunek ?? "", ukonczono: !!o.ukonczono,
+      q0_oryginal: o.oryginal ?? "", q5_najlepsza: o.najlepsza ?? "", czas_s: o.czas_s ?? "", uwagi: o.uwagi ?? "" };
+    const pusta = { litera: "", q1_realizacja: "", q2_miejsce: "", q3_zmiany_uboczne: "", q3_inna: "", q4_realizm: "",
+      card_co: "", ctr_oryginal: "", ctr_wersja: "", eff_strona: "", eff_menisk: "", edem_inne: "", czas: "" };
+    if (o.typ === "realizm") return [{ ...base, ...pusta, q4_realizm: o.realizm ?? "", czas: o.t ?? o.zapisano ?? "" }];
+    return LITERY.map(L => { const w = o.wersje?.[L] || {};
+      return { ...base, ...pusta, litera: L, q1_realizacja: w.q1 ?? "", q2_miejsce: w.q2 ?? "", q3_zmiany_uboczne: (w.q3 || []).join(";"),
+        q3_inna: w.q3_inna ?? "", q4_realizm: w.q4 ?? "", card_co: w.card_co ?? "", ctr_oryginal: w.ctr_oryginal ?? "",
+        ctr_wersja: w.ctr_wersja ?? "", eff_strona: w.eff_strona ?? "", eff_menisk: w.eff_menisk ?? "",
+        edem_inne: (w.edem_inne || []).join(";"), czas: w.t ?? "" }; });
+  });
 }
 function toCSV(rs) {
   if (!rs.length) return "";
@@ -381,36 +665,37 @@ function toCSV(rs) {
   return [cols.join(","), ...rs.map(r => cols.map(c => q(r[c])).join(","))].join("\n");
 }
 
-// ---------- obrazy: przytrzymanie = oryginał, kliknięcie = powiększenie ----------
-function bindCompare() {
-  document.querySelectorAll(".imgwrap").forEach(w => {
-    const im = w.querySelector("img"), tag = w.querySelector(".tag"); let held = false, timer;
-    const show = () => { held = true; im.src = im.dataset.orig; tag.hidden = false; };
-    const hide = () => { clearTimeout(timer); if (held) { im.src = im.dataset.cf; tag.hidden = true; } };
-    w.addEventListener("pointerdown", e => { e.preventDefault(); timer = setTimeout(show, 180); });
-    ["pointerup", "pointerleave", "pointercancel"].forEach(ev => w.addEventListener(ev, hide));
-    w.addEventListener("click", e => { if (held) { e.stopPropagation(); held = false; } }, true);
-    w.addEventListener("contextmenu", e => e.preventDefault());
-  });
-}
-const lb = document.getElementById("lightbox");
-function bindZoom() {
-  document.querySelectorAll(".zoomable").forEach(im => im.addEventListener("click", () => {
-    lb.querySelector("img").src = im.dataset.cf || im.src; lb.hidden = false; }));
-}
-lb.onclick = () => lb.hidden = true;
-document.addEventListener("keydown", e => { if (e.key === "Escape") lb.hidden = true; });
+document.getElementById("ownerBtn").onclick = () => { view = view === "owner" ? "survey" : "owner"; render(); };
 
 function render() {
+  flipCurrent = null;
   updateHeader();
-  if (!S.oceniajacy) return renderStart();
-  if (S.pauza) return renderPause();
-  if (S.idx >= N) return renderEnd();
-  renderCase();
+  if (view === "owner") return renderOwner();
+  const s = ses();
+  if (!s) return renderStart();
+  if (s.idx >= SEQ.length) return renderEnd();
+  const it = SEQ[s.idx];
+  it.typ === "realizm" ? renderRealizm(it) : renderCase(it);
 }
-document.getElementById("noEndpoint").hidden = !!ENDPOINT;
-render();
-flush();
+
+// ---------- start ----------
+(async () => {
+  try {
+    const d = await (await fetch("dane.json")).json();
+    SEQ = d.sekwencja; let nr = 0; SEQ.forEach(it => { if (it.typ === "przypadek") it.nr = ++nr; }); NPRZ = nr;
+  } catch { return renderNoAccess("Nie udało się wczytać listy przypadków. Odśwież stronę."); }
+  if (typeof API_URL !== "string" || !/^https:\/\/script\.google\.com\//.test(API_URL))
+    return renderNoAccess("Ankieta nie jest jeszcze skonfigurowana (brak adresu zapisu w config.js). Proszę skontaktować się z badaczem.");
+  try { if ((await api({})).ankieta !== "NIH v2") throw 0; }    // pod adresem nadal stary skrypt (v1)?
+  catch { return renderNoAccess("Ankieta jest w trakcie aktualizacji albo nie ma połączenia z bazą odpowiedzi. Proszę spróbować później."); }
+  K = { sesje: {}, aktywna: null };
+  if (PANEL) { view = "owner"; return render(); }
+  const t = new URLSearchParams(location.search).get("kod")?.toUpperCase() || lsGet("token");
+  if (t) {
+    try { await wczytajKod(t); }
+    catch { return renderNoAccess("Nie udało się połączyć z bazą odpowiedzi. Proszę sprawdzić internet i odświeżyć stronę."); }
+    if (K.aktywna && K.sesje[K.aktywna]) return openSession(K.aktywna);
+  }
+  render();
+})();
 </script>
-</body>
-</html>
