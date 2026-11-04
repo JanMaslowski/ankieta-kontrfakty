@@ -158,7 +158,7 @@ const ZMIANY = [
 const $app = document.getElementById("app");
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-let SEQ = [], NPRZ = 0;
+let SEQ = [], SEQ_ALL = [], NPRZ = 0;   // SEQ_ALL: pełna lista z dane.json, SEQ: bez pozycji wycofanych (pomin)
 const PANEL = new URLSearchParams(location.search).has("panel");   // ?panel = panel badacza (hasło)
 let token = null, isOwner = PANEL;   // token = kod powrotu oceniającego (zamiast konta)
 let ODP = {};           // wszystkie odpowiedzi tego kodu: klucz <sesja>__<pozycja> → dokument
@@ -267,7 +267,7 @@ function renderStart() {
       <h2>Ocena zmodyfikowanych zdjęć RTG klatki piersiowej</h2>
       <p>Model AI rozpoznaje na zdjęciach RTG kardiomegalię, płyn w jamie opłucnej i obrzęk płuc. Kilka algorytmów
          próbowało zmienić każde zdjęcie tak, żeby <b>dodać</b> albo <b>usunąć</b> objawy jednej z tych chorób.
-         W każdym przypadku zobaczy Pan/Pani oryginał i <b>siedem zmodyfikowanych wersji (A–G)</b>, w losowej kolejności.</p>
+         W każdym przypadku zobaczy Pan/Pani oryginał i <b>sześć zmodyfikowanych wersji</b> (oznaczonych literami), w losowej kolejności.</p>
       <ul>
         <li><b>Oryginał:</b> czy widać na nim daną chorobę.</li>
         <li><b>Każda wersja:</b> czy objawy zostały dodane (usunięte), czy zmiana jest we właściwym miejscu,
@@ -330,7 +330,7 @@ function renderStart() {
     K.sesje = K.sesje || {};
     K.sesje[k] = { oceniajacy: { id: rid.value.trim(), specjalizacja: document.getElementById("spec").value,
                    doswiadczenie_lata: document.getElementById("exp").value.trim() },
-                   start: new Date().toISOString(), idx: 0, ukonczone: 0 };
+                   start: new Date().toISOString(), idx: 0, ukonczone: 0, seq: 2 };
     K.aktywna = k; O = {}; saveKonto(); render();
   };
 }
@@ -338,6 +338,14 @@ function renderStart() {
 function openSession(k) {
   K.aktywna = k; O = {};
   for (const [kl, o] of Object.entries(ODP)) if (kl.startsWith(k + "__")) O[o.pozycja] = JSON.parse(JSON.stringify(o));
+  // 4 XI 2026: sesje zaczęte przed wycofaniem pozycji (seq < 2) mają idx liczony na pełnej liście;
+  // przeliczamy go raz na pierwszą niewycofaną pozycję od miejsca, w którym oceniający był.
+  const s = K.sesje[k];
+  if (s && (s.seq ?? 1) < 2) {
+    const i = SEQ.findIndex(it => SEQ_ALL.indexOf(it) >= (s.idx ?? 0));
+    s.idx = i < 0 ? SEQ.length : i; s.seq = 2;
+    s.ukonczone = SEQ.filter(it => O[it.id]?.ukonczono).length;
+  }
   saveKonto(); render();
 }
 
@@ -405,11 +413,19 @@ const krokGotowy = (o, k) => k === "O" ? !!o.oryginal : k === "K" ? !!o.najlepsz
 function renderCase(it) {
   const s = ses(), o = O[it.id] ||= nowy(it);
   const ch = CHOROBY[it.choroba], add = it.kierunek === "add";
+  // 4 XI 2026: jedna metoda wycofana z badania; jej litera (it.ukryj, inna w każdym przypadku) nie jest
+  // pokazywana. Litery i kafle pozostałych wersji bez zmian, więc wcześniejsze odpowiedzi nadal pasują do klucza;
+  // odpowiedzi już udzielone dla ukrytej litery zostają w danych (eksport CSV obejmuje wszystkie litery).
+  const WID = LITERY.filter(L => L !== it.ukryj), KR = ["O", ...WID, "K"];
+  if (!KR.includes(o.krok)) o.krok = WID.find(L => L > o.krok) || "K";   // ktoś był w trakcie ukrytej wersji
+  // przypadek niedokończony, w którym wybrano już ukrytą wersję jako najlepszą: wybór trzeba powtórzyć
+  // (stary zostaje w polu najlepsza_przed_zmiana); ukończonych przypadków nie zmieniamy
+  if (!o.ukonczono && o.najlepsza && o.najlepsza === it.ukryj) { o.najlepsza_przed_zmiana = o.najlepsza; o.najlepsza = null; }
   const zad = add
-    ? `Zdjęcie bez ${ch.dop} według modelu AI. Wersje A–G miały <b>dodać</b> objawy ${ch.dop}.`
-    : `Zdjęcie z ${ch.narz} według modelu AI. Wersje A–G miały <b>usunąć</b> objawy ${ch.dop}.`;
+    ? `Zdjęcie bez ${ch.dop} według modelu AI. Wersje ${WID.join(", ")} miały <b>dodać</b> objawy ${ch.dop}.`
+    : `Zdjęcie z ${ch.narz} według modelu AI. Wersje ${WID.join(", ")} miały <b>usunąć</b> objawy ${ch.dop}.`;
   const k = o.krok, dostep = kk => kk === "O" || !!o.oryginal;
-  const tabs = KROKI.map(kk => `<button class="tab ${kk === k ? "cur" : ""} ${krokGotowy(o, kk) ? "done" : ""}" data-k="${kk}"
+  const tabs = KR.map(kk => `<button class="tab ${kk === k ? "cur" : ""} ${krokGotowy(o, kk) ? "done" : ""}" data-k="${kk}"
       ${dostep(kk) ? "" : "disabled"}>${kk === "O" ? "Oryginał" : kk === "K" ? "Podsumowanie" : "Wersja " + kk}</button>`).join("");
   let body = "";
   if (k === "O") {
@@ -420,11 +436,11 @@ function renderCase(it) {
         <p class="muted">Ocena samego oryginału, niezależnie od zdania modelu AI.</p></div></div>`;
   } else if (k === "K") {
     body = `<div class="q" style="margin-top:14px"><div class="qt">Która wersja najlepiej realizuje zadanie przy najmniejszych zmianach ubocznych?</div>
-        ${seg("q5", [...LITERY.map(L => [L, L]), ["zadna", "żadna"]], o.najlepsza)}</div>
+        ${seg("q5", [...WID.map(L => [L, L]), ["zadna", "żadna"]], o.najlepsza)}</div>
       <div class="q"><label class="qt" for="uwagi">Uwagi do przypadku <small>(opcjonalnie)</small></label>
         <textarea id="uwagi" placeholder="np. artefakty, nierealistyczna anatomia, inna patologia">${esc(o.uwagi)}</textarea></div>
       <div class="tablewrap"><table><thead><tr><th>Wersja</th><th>Realizacja</th><th>Miejsce</th><th>Ten sam pacjent</th></tr></thead><tbody>
-        ${LITERY.map(L => { const w = o.wersje[L] || {}; return `<tr><td>${L}</td><td>${w.q1 ?? "–"}</td><td>${esc(w.q2 ?? "–").replace("_", " ")}</td><td>${w.q4 ?? "–"}</td></tr>`; }).join("")}
+        ${WID.map(L => { const w = o.wersje[L] || {}; return `<tr><td>${L}</td><td>${w.q1 ?? "–"}</td><td>${esc(w.q2 ?? "–").replace("_", " ")}</td><td>${w.q4 ?? "–"}</td></tr>`; }).join("")}
       </tbody></table></div>`;
   } else {
     const L = k, j = LITERY.indexOf(L) + 1, w = o.wersje[L] ||= { q3: [] };
@@ -453,7 +469,7 @@ function renderCase(it) {
           ${seg("q4", SKALA, w.q4, true)}<div class="ends"><span>1 · sztuczny albo inny pacjent</span><span>5 · wiarygodne zdjęcie tego pacjenta</span></div></div>
       </div></div>`;
   }
-  const idxK = KROKI.indexOf(k);
+  const idxK = KR.indexOf(k);
   $app.innerHTML = `
     <div class="card">
       <div class="row"><h2>Przypadek ${it.nr} z ${NPRZ}: ${ch.pl}</h2><span class="spacer"></span><span class="eyebrow">pozycja ${s.idx + 1} z ${SEQ.length}</span></div>
@@ -464,7 +480,7 @@ function renderCase(it) {
     <div class="row">
       <button id="prev">← ${idxK === 0 ? (s.idx === 0 ? "Wstecz" : "Poprzednia pozycja") : "Wstecz"}</button>
       <span class="spacer"></span><span class="missing" id="missing"></span>
-      <button class="primary" id="next">${k === "K" ? "Zapisz przypadek i dalej →" : k === LITERY.at(-1) ? "Dalej: podsumowanie →" : k === "O" ? "Dalej: wersja A →" : `Dalej: wersja ${LITERY[idxK]} →`}</button>
+      <button class="primary" id="next">${k === "K" ? "Zapisz przypadek i dalej →" : KR[idxK + 1] === "K" ? "Dalej: podsumowanie →" : `Dalej: wersja ${KR[idxK + 1]} →`}</button>
     </div>`;
   if (s.idx === 0 && idxK === 0) document.getElementById("prev").disabled = true;
 
@@ -473,8 +489,8 @@ function renderCase(it) {
     document.getElementById("missing").textContent = ok ? "" : "Uzupełnij odpowiedzi, aby przejść dalej"; };
   const ruch = kk => { o.krok = kk; saveItem(it.id, true); render(); scrollTo(0, 0); };
   $app.querySelectorAll(".tab").forEach(b => b.onclick = () => ruch(b.dataset.k));
-  document.getElementById("prev").onclick = () => idxK === 0 ? go(-1) : ruch(KROKI[idxK - 1]);
-  next.onclick = () => k === "K" ? finishItem(o) : ruch(KROKI[idxK + 1]);
+  document.getElementById("prev").onclick = () => idxK === 0 ? go(-1) : ruch(KR[idxK - 1]);
+  next.onclick = () => k === "K" ? finishItem(o) : ruch(KR[idxK + 1]);
 
   if (k === "O") $app.querySelectorAll("input[name=q0]").forEach(r => r.onchange = () => {
     o.oryginal = r.value; o.t_oryginal = new Date().toISOString(); saveItem(it.id); check(); renderTabsState(o); });
@@ -482,7 +498,7 @@ function renderCase(it) {
     $app.querySelectorAll("input[name=q5]").forEach(r => r.onchange = () => { o.najlepsza = r.value; saveItem(it.id); check(); });
     document.getElementById("uwagi").oninput = e => { o.uwagi = e.target.value; saveItem(it.id); };
   }
-  if (LITERY.includes(k)) bindVersion(o, k, check);
+  if (WID.includes(k)) bindVersion(o, k, check);
   check(); bindZoom(); preload(s.idx + 1);
 }
 function renderTabsState(o) { $app.querySelectorAll(".tab").forEach(b => { b.disabled = b.dataset.k !== "O" && !o.oryginal;
@@ -648,7 +664,7 @@ function offer(filename, data) {
   document.getElementById("dlMsg").textContent = "Plik pobrany.";
 }
 function allRows() {
-  const poz = Object.fromEntries(SEQ.map((it, i) => [it.id, i + 1]));
+  const poz = Object.fromEntries(SEQ_ALL.map((it, i) => [it.id, i + 1]));
   const konto = Object.fromEntries(allKonta.map(k => [k.uid, k]));
   return allOdp.filter(o => o.ukonczono || o.oryginal || o.realizm != null).flatMap(o => {
     const s = konto[o.uid]?.sesje?.[o.sesja] || {};
@@ -690,7 +706,7 @@ function render() {
 (async () => {
   try {
     const d = await (await fetch("dane.json")).json();
-    SEQ = d.sekwencja; let nr = 0; SEQ.forEach(it => { if (it.typ === "przypadek") it.nr = ++nr; }); NPRZ = nr;
+    SEQ_ALL = d.sekwencja; SEQ = SEQ_ALL.filter(it => !it.pomin); let nr = 0; SEQ.forEach(it => { if (it.typ === "przypadek") it.nr = ++nr; }); NPRZ = nr;
   } catch { return renderNoAccess("Nie udało się wczytać listy przypadków. Odśwież stronę."); }
   if (typeof API_URL !== "string" || !/^https:\/\/script\.google\.com\//.test(API_URL))
     return renderNoAccess("Ankieta nie jest jeszcze skonfigurowana (brak adresu zapisu w config.js). Proszę skontaktować się z badaczem.");

@@ -1,1 +1,568 @@
-{"wersja": 2, "litery": "ABCDEFG", "seed": 2026, "sekwencja": [{"typ": "przypadek", "id": "P01", "choroba": "Cardiomegaly", "kierunek": "rm"}, {"typ": "przypadek", "id": "P02", "choroba": "Effusion", "kierunek": "rm"}, {"typ": "realizm", "id": "R01"}, {"typ": "przypadek", "id": "P03", "choroba": "Cardiomegaly", "kierunek": "rm"}, {"typ": "przypadek", "id": "P04", "choroba": "Cardiomegaly", "kierunek": "add"}, {"typ": "realizm", "id": "R02"}, {"typ": "przypadek", "id": "P05", "choroba": "Edema", "kierunek": "rm"}, {"typ": "przypadek", "id": "P06", "choroba": "Edema", "kierunek": "add"}, {"typ": "realizm", "id": "R03"}, {"typ": "przypadek", "id": "P07", "choroba": "Cardiomegaly", "kierunek": "add"}, {"typ": "przypadek", "id": "P08", "choroba": "Effusion", "kierunek": "rm"}, {"typ": "realizm", "id": "R04"}, {"typ": "przypadek", "id": "P09", "choroba": "Effusion", "kierunek": "add"}, {"typ": "przypadek", "id": "P10", "choroba": "Edema", "kierunek": "add"}, {"typ": "realizm", "id": "R05"}, {"typ": "przypadek", "id": "P11", "choroba": "Cardiomegaly", "kierunek": "add"}, {"typ": "realizm", "id": "R06"}, {"typ": "przypadek", "id": "P12", "choroba": "Cardiomegaly", "kierunek": "rm"}, {"typ": "przypadek", "id": "P13", "choroba": "Effusion", "kierunek": "add"}, {"typ": "realizm", "id": "R07"}, {"typ": "przypadek", "id": "P14", "choroba": "Effusion", "kierunek": "rm"}, {"typ": "przypadek", "id": "P15", "choroba": "Cardiomegaly", "kierunek": "add"}, {"typ": "realizm", "id": "R08"}, {"typ": "przypadek", "id": "P16", "choroba": "Effusion", "kierunek": "add"}, {"typ": "przypadek", "id": "P17", "choroba": "Effusion", "kierunek": "add"}, {"typ": "realizm", "id": "R09"}, {"typ": "przypadek", "id": "P18", "choroba": "Cardiomegaly", "kierunek": "rm"}, {"typ": "przypadek", "id": "P19", "choroba": "Edema", "kierunek": "add"}, {"typ": "realizm", "id": "R10"}, {"typ": "przypadek", "id": "P20", "choroba": "Edema", "kierunek": "add"}, {"typ": "realizm", "id": "R11"}, {"typ": "przypadek", "id": "P21", "choroba": "Cardiomegaly", "kierunek": "rm"}, {"typ": "przypadek", "id": "P22", "choroba": "Edema", "kierunek": "rm"}, {"typ": "realizm", "id": "R12"}, {"typ": "przypadek", "id": "P23", "choroba": "Edema", "kierunek": "rm"}, {"typ": "przypadek", "id": "P24", "choroba": "Effusion", "kierunek": "rm"}, {"typ": "realizm", "id": "R13"}, {"typ": "przypadek", "id": "P25", "choroba": "Edema", "kierunek": "rm"}, {"typ": "przypadek", "id": "P26", "choroba": "Effusion", "kierunek": "rm"}, {"typ": "realizm", "id": "R14"}, {"typ": "przypadek", "id": "P27", "choroba": "Cardiomegaly", "kierunek": "add"}, {"typ": "przypadek", "id": "P28", "choroba": "Effusion", "kierunek": "rm"}, {"typ": "realizm", "id": "R15"}, {"typ": "przypadek", "id": "P29", "choroba": "Cardiomegaly", "kierunek": "rm"}, {"typ": "przypadek", "id": "P30", "choroba": "Edema", "kierunek": "add"}, {"typ": "realizm", "id": "R16"}, {"typ": "przypadek", "id": "P31", "choroba": "Effusion", "kierunek": "add"}, {"typ": "realizm", "id": "R17"}, {"typ": "przypadek", "id": "P32", "choroba": "Effusion", "kierunek": "rm"}, {"typ": "przypadek", "id": "P33", "choroba": "Edema", "kierunek": "rm"}, {"typ": "realizm", "id": "R18"}, {"typ": "przypadek", "id": "P34", "choroba": "Effusion", "kierunek": "add"}, {"typ": "przypadek", "id": "P35", "choroba": "Edema", "kierunek": "add"}, {"typ": "realizm", "id": "R19"}, {"typ": "przypadek", "id": "P36", "choroba": "Edema", "kierunek": "add"}, {"typ": "przypadek", "id": "P37", "choroba": "Edema", "kierunek": "add"}, {"typ": "realizm", "id": "R20"}, {"typ": "przypadek", "id": "P38", "choroba": "Cardiomegaly", "kierunek": "rm"}, {"typ": "przypadek", "id": "P39", "choroba": "Effusion", "kierunek": "rm"}, {"typ": "realizm", "id": "R21"}, {"typ": "przypadek", "id": "P40", "choroba": "Cardiomegaly", "kierunek": "add"}, {"typ": "realizm", "id": "R22"}, {"typ": "przypadek", "id": "P41", "choroba": "Edema", "kierunek": "rm"}, {"typ": "przypadek", "id": "P42", "choroba": "Edema", "kierunek": "add"}, {"typ": "realizm", "id": "R23"}, {"typ": "przypadek", "id": "P43", "choroba": "Effusion", "kierunek": "add"}, {"typ": "przypadek", "id": "P44", "choroba": "Cardiomegaly", "kierunek": "add"}, {"typ": "realizm", "id": "R24"}, {"typ": "przypadek", "id": "P45", "choroba": "Effusion", "kierunek": "rm"}, {"typ": "przypadek", "id": "P46", "choroba": "Effusion", "kierunek": "add"}, {"typ": "realizm", "id": "R25"}, {"typ": "przypadek", "id": "P47", "choroba": "Edema", "kierunek": "rm"}, {"typ": "przypadek", "id": "P48", "choroba": "Edema", "kierunek": "rm"}, {"typ": "realizm", "id": "R26"}, {"typ": "przypadek", "id": "P49", "choroba": "Cardiomegaly", "kierunek": "rm"}, {"typ": "przypadek", "id": "P50", "choroba": "Effusion", "kierunek": "rm"}, {"typ": "realizm", "id": "R27"}, {"typ": "przypadek", "id": "P51", "choroba": "Cardiomegaly", "kierunek": "add"}, {"typ": "realizm", "id": "R28"}, {"typ": "przypadek", "id": "P52", "choroba": "Edema", "kierunek": "rm"}, {"typ": "przypadek", "id": "P53", "choroba": "Cardiomegaly", "kierunek": "add"}, {"typ": "realizm", "id": "R29"}, {"typ": "przypadek", "id": "P54", "choroba": "Effusion", "kierunek": "add"}, {"typ": "przypadek", "id": "P55", "choroba": "Cardiomegaly", "kierunek": "rm"}, {"typ": "realizm", "id": "R30"}, {"typ": "przypadek", "id": "P56", "choroba": "Cardiomegaly", "kierunek": "add"}, {"typ": "przypadek", "id": "P57", "choroba": "Effusion", "kierunek": "add"}, {"typ": "realizm", "id": "R31"}, {"typ": "przypadek", "id": "P58", "choroba": "Edema", "kierunek": "add"}, {"typ": "przypadek", "id": "P59", "choroba": "Cardiomegaly", "kierunek": "rm"}, {"typ": "realizm", "id": "R32"}, {"typ": "przypadek", "id": "P60", "choroba": "Edema", "kierunek": "rm"}, {"typ": "realizm", "id": "R33"}]}
+{
+ "wersja": 3,
+ "litery": "ABCDEFG",
+ "seed": 2026,
+ "sekwencja": [
+  {
+   "typ": "przypadek",
+   "id": "P01",
+   "choroba": "Cardiomegaly",
+   "kierunek": "rm",
+   "ukryj": "F"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P02",
+   "choroba": "Effusion",
+   "kierunek": "rm",
+   "ukryj": "F"
+  },
+  {
+   "typ": "realizm",
+   "id": "R01"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P03",
+   "choroba": "Cardiomegaly",
+   "kierunek": "rm",
+   "ukryj": "A"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P04",
+   "choroba": "Cardiomegaly",
+   "kierunek": "add",
+   "ukryj": "D"
+  },
+  {
+   "typ": "realizm",
+   "id": "R02"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P05",
+   "choroba": "Edema",
+   "kierunek": "rm",
+   "ukryj": "B"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P06",
+   "choroba": "Edema",
+   "kierunek": "add",
+   "ukryj": "C"
+  },
+  {
+   "typ": "realizm",
+   "id": "R03"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P07",
+   "choroba": "Cardiomegaly",
+   "kierunek": "add",
+   "ukryj": "E"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P08",
+   "choroba": "Effusion",
+   "kierunek": "rm",
+   "ukryj": "G"
+  },
+  {
+   "typ": "realizm",
+   "id": "R04",
+   "pomin": true
+  },
+  {
+   "typ": "przypadek",
+   "id": "P09",
+   "choroba": "Effusion",
+   "kierunek": "add",
+   "ukryj": "E"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P10",
+   "choroba": "Edema",
+   "kierunek": "add",
+   "ukryj": "E"
+  },
+  {
+   "typ": "realizm",
+   "id": "R05"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P11",
+   "choroba": "Cardiomegaly",
+   "kierunek": "add",
+   "ukryj": "A"
+  },
+  {
+   "typ": "realizm",
+   "id": "R06"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P12",
+   "choroba": "Cardiomegaly",
+   "kierunek": "rm",
+   "ukryj": "F"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P13",
+   "choroba": "Effusion",
+   "kierunek": "add",
+   "ukryj": "B"
+  },
+  {
+   "typ": "realizm",
+   "id": "R07"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P14",
+   "choroba": "Effusion",
+   "kierunek": "rm",
+   "ukryj": "B"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P15",
+   "choroba": "Cardiomegaly",
+   "kierunek": "add",
+   "ukryj": "B"
+  },
+  {
+   "typ": "realizm",
+   "id": "R08"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P16",
+   "choroba": "Effusion",
+   "kierunek": "add",
+   "ukryj": "C"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P17",
+   "choroba": "Effusion",
+   "kierunek": "add",
+   "ukryj": "F"
+  },
+  {
+   "typ": "realizm",
+   "id": "R09"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P18",
+   "choroba": "Cardiomegaly",
+   "kierunek": "rm",
+   "ukryj": "F"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P19",
+   "choroba": "Edema",
+   "kierunek": "add",
+   "ukryj": "F"
+  },
+  {
+   "typ": "realizm",
+   "id": "R10"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P20",
+   "choroba": "Edema",
+   "kierunek": "add",
+   "ukryj": "D"
+  },
+  {
+   "typ": "realizm",
+   "id": "R11"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P21",
+   "choroba": "Cardiomegaly",
+   "kierunek": "rm",
+   "ukryj": "D"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P22",
+   "choroba": "Edema",
+   "kierunek": "rm",
+   "ukryj": "B"
+  },
+  {
+   "typ": "realizm",
+   "id": "R12",
+   "pomin": true
+  },
+  {
+   "typ": "przypadek",
+   "id": "P23",
+   "choroba": "Edema",
+   "kierunek": "rm",
+   "ukryj": "C"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P24",
+   "choroba": "Effusion",
+   "kierunek": "rm",
+   "ukryj": "F"
+  },
+  {
+   "typ": "realizm",
+   "id": "R13"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P25",
+   "choroba": "Edema",
+   "kierunek": "rm",
+   "ukryj": "A"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P26",
+   "choroba": "Effusion",
+   "kierunek": "rm",
+   "ukryj": "C"
+  },
+  {
+   "typ": "realizm",
+   "id": "R14"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P27",
+   "choroba": "Cardiomegaly",
+   "kierunek": "add",
+   "ukryj": "D"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P28",
+   "choroba": "Effusion",
+   "kierunek": "rm",
+   "ukryj": "D"
+  },
+  {
+   "typ": "realizm",
+   "id": "R15"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P29",
+   "choroba": "Cardiomegaly",
+   "kierunek": "rm",
+   "ukryj": "C"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P30",
+   "choroba": "Edema",
+   "kierunek": "add",
+   "ukryj": "D"
+  },
+  {
+   "typ": "realizm",
+   "id": "R16"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P31",
+   "choroba": "Effusion",
+   "kierunek": "add",
+   "ukryj": "E"
+  },
+  {
+   "typ": "realizm",
+   "id": "R17"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P32",
+   "choroba": "Effusion",
+   "kierunek": "rm",
+   "ukryj": "G"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P33",
+   "choroba": "Edema",
+   "kierunek": "rm",
+   "ukryj": "C"
+  },
+  {
+   "typ": "realizm",
+   "id": "R18"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P34",
+   "choroba": "Effusion",
+   "kierunek": "add",
+   "ukryj": "D"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P35",
+   "choroba": "Edema",
+   "kierunek": "add",
+   "ukryj": "C"
+  },
+  {
+   "typ": "realizm",
+   "id": "R19",
+   "pomin": true
+  },
+  {
+   "typ": "przypadek",
+   "id": "P36",
+   "choroba": "Edema",
+   "kierunek": "add",
+   "ukryj": "A"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P37",
+   "choroba": "Edema",
+   "kierunek": "add",
+   "ukryj": "B"
+  },
+  {
+   "typ": "realizm",
+   "id": "R20"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P38",
+   "choroba": "Cardiomegaly",
+   "kierunek": "rm",
+   "ukryj": "B"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P39",
+   "choroba": "Effusion",
+   "kierunek": "rm",
+   "ukryj": "E"
+  },
+  {
+   "typ": "realizm",
+   "id": "R21"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P40",
+   "choroba": "Cardiomegaly",
+   "kierunek": "add",
+   "ukryj": "E"
+  },
+  {
+   "typ": "realizm",
+   "id": "R22"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P41",
+   "choroba": "Edema",
+   "kierunek": "rm",
+   "ukryj": "D"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P42",
+   "choroba": "Edema",
+   "kierunek": "add",
+   "ukryj": "A"
+  },
+  {
+   "typ": "realizm",
+   "id": "R23"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P43",
+   "choroba": "Effusion",
+   "kierunek": "add",
+   "ukryj": "E"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P44",
+   "choroba": "Cardiomegaly",
+   "kierunek": "add",
+   "ukryj": "F"
+  },
+  {
+   "typ": "realizm",
+   "id": "R24"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P45",
+   "choroba": "Effusion",
+   "kierunek": "rm",
+   "ukryj": "E"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P46",
+   "choroba": "Effusion",
+   "kierunek": "add",
+   "ukryj": "B"
+  },
+  {
+   "typ": "realizm",
+   "id": "R25"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P47",
+   "choroba": "Edema",
+   "kierunek": "rm",
+   "ukryj": "F"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P48",
+   "choroba": "Edema",
+   "kierunek": "rm",
+   "ukryj": "D"
+  },
+  {
+   "typ": "realizm",
+   "id": "R26"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P49",
+   "choroba": "Cardiomegaly",
+   "kierunek": "rm",
+   "ukryj": "G"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P50",
+   "choroba": "Effusion",
+   "kierunek": "rm",
+   "ukryj": "G"
+  },
+  {
+   "typ": "realizm",
+   "id": "R27"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P51",
+   "choroba": "Cardiomegaly",
+   "kierunek": "add",
+   "ukryj": "D"
+  },
+  {
+   "typ": "realizm",
+   "id": "R28"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P52",
+   "choroba": "Edema",
+   "kierunek": "rm",
+   "ukryj": "A"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P53",
+   "choroba": "Cardiomegaly",
+   "kierunek": "add",
+   "ukryj": "A"
+  },
+  {
+   "typ": "realizm",
+   "id": "R29"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P54",
+   "choroba": "Effusion",
+   "kierunek": "add",
+   "ukryj": "A"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P55",
+   "choroba": "Cardiomegaly",
+   "kierunek": "rm",
+   "ukryj": "B"
+  },
+  {
+   "typ": "realizm",
+   "id": "R30"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P56",
+   "choroba": "Cardiomegaly",
+   "kierunek": "add",
+   "ukryj": "A"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P57",
+   "choroba": "Effusion",
+   "kierunek": "add",
+   "ukryj": "C"
+  },
+  {
+   "typ": "realizm",
+   "id": "R31"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P58",
+   "choroba": "Edema",
+   "kierunek": "add",
+   "ukryj": "E"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P59",
+   "choroba": "Cardiomegaly",
+   "kierunek": "rm",
+   "ukryj": "E"
+  },
+  {
+   "typ": "realizm",
+   "id": "R32"
+  },
+  {
+   "typ": "przypadek",
+   "id": "P60",
+   "choroba": "Edema",
+   "kierunek": "rm",
+   "ukryj": "C"
+  },
+  {
+   "typ": "realizm",
+   "id": "R33"
+  }
+ ],
+ "usunieta_metoda_od": "2026-11-04",
+ "pominiete_realizm": [
+  "R04",
+  "R12",
+  "R19"
+ ]
+}

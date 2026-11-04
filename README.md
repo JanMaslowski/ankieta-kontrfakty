@@ -5,6 +5,8 @@ Do wypełnienia nie trzeba zakładać konta.
 
 - 60 przypadków z NIH ChestX-ray14: kardiomegalia, płyn w jamie opłucnej, obrzęk płuc, każda choroba po 10 przypadków dodania i 10 usunięcia.
 - Każdy przypadek ma 7 zmodyfikowanych wersji (A–G) w losowej kolejności. Między przypadkami jest 33 pozycji kontroli realizmu (R01–R33).
+- Od 4 XI 2026 jedna metoda jest wycofana: strona pomija jej literę w każdym przypadku (pole `ukryj` w `dane.json`)
+  i jej 3 pozycje realizmu (`pomin`). Zapisane odpowiedzi zostają, a rozpoczęte sesje kontynuują od tego samego miejsca.
 - Klucz liter → metod nie jest częścią repozytorium (jest u badacza).
 - Wersja 1 ankiety (15 X 2026) jest w historii gita (commit `10133c1`).
 
